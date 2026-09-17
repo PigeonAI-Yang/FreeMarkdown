@@ -1,0 +1,21 @@
+# 依赖与构建产物
+node_modules/
+dist/
+src-tauri/target/
+
+# Tauri 签名密钥（永远不要提交）
+src-tauri/*.pem
+src-tauri/*.key
+*.pem
+*.key
+
+# 本地验证截图与性能探针输出
+.verify/
+
+# 编辑器与系统文件
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+Desktop.ini

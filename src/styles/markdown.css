@@ -1,0 +1,205 @@
+/* 正文排版：github-markdown-css 为底 + 阅读器定制 */
+@import "github-markdown-css/github-markdown.css";
+@import "./md-theme-vars.css";
+
+:root {
+  --doc-font-size: 17px;
+  --doc-max-width: 72ch;
+}
+
+.doc-scroll {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--bg-elev);
+  contain: strict;
+}
+
+/* .doc-content 同时携带 markdown-body 类（github-markdown-css 的作用域） */
+.doc-content.markdown-body {
+  max-width: var(--doc-max-width);
+  margin: 0 auto;
+  padding: 28px 32px 40vh;
+  font-size: var(--doc-font-size);
+  font-family: var(--font-sans);
+  background: transparent;
+  color: var(--text-1);
+  min-height: 100%;
+}
+
+/* github-markdown-css 的代码/内联代码字体 */
+.markdown-body.doc-content code,
+.markdown-body.doc-content pre {
+  font-family: var(--font-mono);
+}
+
+/* 大文档分块 */
+.doc-chunk {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 400px;
+}
+
+/* 数学公式溢出处理 */
+.doc-content .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 0;
+}
+
+/* mermaid 容器 */
+.doc-content .mermaid-host {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}
+.doc-content .mermaid-host svg {
+  max-width: 100%;
+  height: auto;
+}
+.doc-content .mermaid-error {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: var(--text-2);
+  font-size: 13px;
+  white-space: pre-wrap;
+}
+
+/* TOC 滚动联动目标高亮 */
+.doc-content .toc-target {
+  scroll-margin-top: 24px;
+}
+
+/* 搜索命中闪烁 */
+@keyframes search-flash {
+  0% {
+    background: color-mix(in srgb, var(--accent) 32%, transparent);
+  }
+  100% {
+    background: transparent;
+  }
+}
+.doc-content .search-flash {
+  animation: search-flash 1.6s ease-out 2;
+  border-radius: 4px;
+}
+
+/* 跳转命中的常驻淡底：闪烁播完后保留，直到用户滚动/下次跳转才清除 */
+.doc-content .search-hit {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  border-radius: 4px;
+}
+
+/* 阅读细节：脚注与引用 */
+.doc-content .footnotes {
+  margin-top: 2.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.9em;
+}
+.doc-content .footnote-ref a,
+.doc-content .footnote-backref {
+  text-decoration: none;
+}
+.doc-content h1 .anchor,
+.doc-content h2 .anchor,
+.doc-content h3 .anchor,
+.doc-content h4 .anchor,
+.doc-content h5 .anchor,
+.doc-content h6 .anchor {
+  text-decoration: none;
+}
+
+/* ---------- 代码高亮（GitHub Light/Dark 配色，手动主题切换） ---------- */
+:root[data-theme="light"] .hljs {
+  color: #1f2328;
+}
+:root[data-theme="light"] .hljs-comment,
+:root[data-theme="light"] .hljs-quote {
+  color: #59636e;
+}
+:root[data-theme="light"] .hljs-keyword,
+:root[data-theme="light"] .hljs-doctag,
+:root[data-theme="light"] .hljs-template-keyword,
+:root[data-theme="light"] .hljs-type {
+  color: #cf222e;
+}
+:root[data-theme="light"] .hljs-string,
+:root[data-theme="light"] .hljs-regexp,
+:root[data-theme="light"] .hljs-addition {
+  color: #0a3069;
+}
+:root[data-theme="light"] .hljs-number,
+:root[data-theme="light"] .hljs-literal,
+:root[data-theme="light"] .hljs-variable,
+:root[data-theme="light"] .hljs-template-variable {
+  color: #0550ae;
+}
+:root[data-theme="light"] .hljs-title,
+:root[data-theme="light"] .hljs-title.function_,
+:root[data-theme="light"] .hljs-section {
+  color: #8250df;
+}
+:root[data-theme="light"] .hljs-title.class_,
+:root[data-theme="light"] .hljs-attr,
+:root[data-theme="light"] .hljs-attribute,
+:root[data-theme="light"] .hljs-name {
+  color: #953800;
+}
+:root[data-theme="light"] .hljs-built_in,
+:root[data-theme="light"] .hljs-symbol {
+  color: #6639ba;
+}
+:root[data-theme="light"] .hljs-deletion {
+  color: #82071e;
+}
+:root[data-theme="light"] .hljs-meta,
+:root[data-theme="light"] .hljs-selector-tag {
+  color: #116329;
+}
+
+:root[data-theme="dark"] .hljs {
+  color: #e6edf3;
+}
+:root[data-theme="dark"] .hljs-comment,
+:root[data-theme="dark"] .hljs-quote {
+  color: #8b949e;
+}
+:root[data-theme="dark"] .hljs-keyword,
+:root[data-theme="dark"] .hljs-doctag,
+:root[data-theme="dark"] .hljs-template-keyword,
+:root[data-theme="dark"] .hljs-type {
+  color: #ff7b72;
+}
+:root[data-theme="dark"] .hljs-string,
+:root[data-theme="dark"] .hljs-regexp,
+:root[data-theme="dark"] .hljs-addition {
+  color: #a5d6ff;
+}
+:root[data-theme="dark"] .hljs-number,
+:root[data-theme="dark"] .hljs-literal,
+:root[data-theme="dark"] .hljs-variable,
+:root[data-theme="dark"] .hljs-template-variable {
+  color: #79c0ff;
+}
+:root[data-theme="dark"] .hljs-title,
+:root[data-theme="dark"] .hljs-title.function_,
+:root[data-theme="dark"] .hljs-section {
+  color: #d2a8ff;
+}
+:root[data-theme="dark"] .hljs-title.class_,
+:root[data-theme="dark"] .hljs-attr,
+:root[data-theme="dark"] .hljs-attribute,
+:root[data-theme="dark"] .hljs-name {
+  color: #ffa657;
+}
+:root[data-theme="dark"] .hljs-built_in,
+:root[data-theme="dark"] .hljs-symbol {
+  color: #ffa657;
+}
+:root[data-theme="dark"] .hljs-deletion {
+  color: #ffdcd7;
+}
+:root[data-theme="dark"] .hljs-meta,
+:root[data-theme="dark"] .hljs-selector-tag {
+  color: #7ee787;
+}
