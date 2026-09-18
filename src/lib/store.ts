@@ -49,6 +49,8 @@ export interface AppState {
   coldStartMs: number | null;
   /** 搜索范围目录；null 表示跟随当前阅读文档所在目录 */
   searchRoot: string | null;
+  /** 网格重建代数：+1 会重挂 DockHost，拿到全新 dockview 实例 */
+  gridEpoch: number;
 }
 
 export const appStore = new Store<AppState>({
@@ -69,6 +71,7 @@ export const appStore = new Store<AppState>({
   settingsOpen: false,
   coldStartMs: null,
   searchRoot: null,
+  gridEpoch: 0,
 });
 
 export function useApp(): AppState {
@@ -133,22 +136,137 @@ export function setDocInfo(path: string, info: DocInfo) {
   appStore.set({ docInfo: { ...appStore.get().docInfo, [path]: info } });
 }
 
+/* ---------- 网格健康检查与重建 ---------- */
+
+/**
+ * 网格是否已损坏：某些布局操作会让 dockview 把分组视图从 DOM 上摘下来
+ * （.dv-view-container 里没有子节点）。此后 dockview 内部靠 DOM 反推网格位置
+ * （getGridLocation 走 parentElement 链）会抛 `Invalid grid element`，
+ * 表现是：moveTo 抛错并把面板摘出分组再也放不回去（文档凭空消失）、
+ * addPanel 静默失效（点什么都打不开）。
+ * 这种状态下唯一的出路是丢掉实例、重挂一个新的。
+ */
+export function gridBroken(api: DockviewApi): boolean {
+  return api.groups.some((g) => {
+    const el = (g as unknown as { element?: HTMLElement }).element;
+    return !!el && !el.isConnected;
+  });
+}
+
+/**
+ * 尝试就地修复损坏的网格：把脱离 DOM 的分组视图放回视图容器
+ * （`.dv-view-container`）。dockview 之后靠 DOM 反推位置，回填后即可继续工作。
+ * 实测：回填后 addPanel / moveTo 均恢复正常，无需重建实例（重建反而会在
+ * dispose 阶段因为元素已不在父节点上而抛错，把 React 子树整个带崩）。
+ * @returns 修复后网格是否健康
+ */
+export function repairGrid(api: DockviewApi): boolean {
+  if (!gridBroken(api)) return true;
+  const detached = api.groups.filter((g) => {
+    const el = (g as unknown as { element?: HTMLElement }).element;
+    return !!el && !el.isConnected;
+  });
+  const containers = Array.from(
+    document.querySelectorAll(".doc-host .dv-view-container"),
+  ) as HTMLElement[];
+  if (containers.length === 0) return false;
+  for (const g of detached) {
+    const el = (g as unknown as { element: HTMLElement }).element;
+    const target = containers.find((c) => c.children.length === 0) ?? containers[0];
+    target.appendChild(el);
+  }
+  return !gridBroken(api);
+}
+
+/** 当前已打开的文档路径（重建网格时按此恢复现场） */
+export function openDocPaths(api: DockviewApi): string[] {
+  return api.panels
+    .filter((p) => p.id.startsWith("doc:"))
+    .map((p) => p.id.slice(4));
+}
+
+/** 重建请求：重挂 DockHost 后用这些路径恢复文档 */
+export const rebuildState: {
+  paths: string[];
+  cardPaths: string[];
+  focus: string | null;
+} = { paths: [], cardPaths: [], focus: null };
+
+export function rebuildGrid(paths: string[], focus?: string, cardPaths: string[] = []) {
+  rebuildState.paths = paths;
+  rebuildState.cardPaths = cardPaths;
+  rebuildState.focus = focus ?? null;
+  appStore.set({ gridEpoch: appStore.get().gridEpoch + 1 });
+}
+
 /* ---------- 打开文件 / 文件夹 ---------- */
 
-export function openFile(path: string, opts?: JumpOpts) {
+export interface OpenTarget {
+  /** 在指定分组内打开（默认：活动分组） */
+  groupId?: string;
+  /** 分屏方向（落点在分组边缘时传入；缺省 center 不传） */
+  direction?: "left" | "right" | "above" | "below";
+}
+
+/**
+ * 统一路径写法：Windows 盘符路径把正斜杠转成反斜杠。
+ * 否则同一个文件会因为 `J:/a/b.md` 与 `J:\a\b.md` 被当成两个文档，
+ * 出现重复标签（面板 id 直接由路径拼出）。
+ */
+export function normalizePath(p: string): string {
+  return /^[A-Za-z]:[\\/]/.test(p) ? p.replace(/\//g, "\\") : p;
+}
+
+export function openFile(rawPath: string, opts?: JumpOpts, target?: OpenTarget) {
   const api = dockRef.api;
   if (!api) return;
+  const path = normalizePath(rawPath);
+  // 网格损坏：任何布局操作都可能把面板吞掉。先尝试就地修复，
+  // 修不好才退到重建实例（重建后按登记表恢复现场）。
+  if (gridBroken(api)) {
+    if (repairGrid(api)) {
+      console.warn("[grid] 分组视图脱离 DOM，已自动回填修复");
+    } else {
+      pendingJumps.set(path, opts);
+      rebuildGrid(Array.from(new Set([...openDocPaths(api), path])), path);
+      return;
+    }
+  }
   const panelId = `doc:${path}`;
   const existing = api.getPanel(panelId);
   if (existing) {
     existing.api.setActive();
   } else {
+    // 目标分组（外部文件拖放指定落点）；找不到则回退默认行为。
+    // 注意：referencePanel 必须是已存在面板，activePanel 可能在布局恢复
+    // 中间态短暂失效，校验存在性后再用，否则 addPanel 直接抛错。
+    const refGroup = target?.groupId ? api.groups.find((g) => g.id === target.groupId) : undefined;
+    const refPanel = refGroup?.activePanel ?? api.activePanel;
+    const refExists = refPanel ? !!api.getPanel(refPanel.id) : false;
+    const dir = target?.direction;
     api.addPanel({
       id: panelId,
       component: "doc",
       title: basename(path),
       params: { path },
+      ...(refExists && refPanel
+        ? {
+            position: {
+              referencePanel: refPanel.id,
+              ...(dir ? { direction: dir } : { direction: "within" as const }),
+            },
+          }
+        : dir && refGroup
+          ? { position: { referenceGroup: refGroup, direction: dir } }
+          : {}),
     });
+    // 校验：dockview 内部状态异常时 addPanel 会静默失效（不抛错也不加面板），
+    // 这时只能用重建兜底，否则就是"点什么都打不开"。
+    if (!api.getPanel(panelId)) {
+      pendingJumps.set(path, opts);
+      rebuildGrid(Array.from(new Set([...openDocPaths(api), path])), path);
+      return;
+    }
   }
   const active = appStore.get().activePanelPath;
   if (active === path) {
@@ -157,6 +275,37 @@ export function openFile(path: string, opts?: JumpOpts) {
     pendingJumps.set(path, opts);
   }
   addRecentFile(path);
+}
+
+/** 打开卡片导出面板（同一路径复用已有面板，落在当前分组） */
+export function openCardPanel(rawPath: string) {
+  const api = dockRef.api;
+  if (!api) return;
+  const path = normalizePath(rawPath);
+  // 同 openFile：网格损坏先就地修复，修不好才重建（重建后卡片面板一并恢复）
+  if (gridBroken(api)) {
+    if (!repairGrid(api)) {
+      rebuildGrid(Array.from(new Set([...openDocPaths(api), path])), path, [path]);
+      return;
+    }
+  }
+  const panelId = `card:${path}`;
+  const existing = api.getPanel(panelId);
+  if (existing) {
+    existing.api.setActive();
+    return;
+  }
+  const refPanel = api.activePanel;
+  const refExists = refPanel ? !!api.getPanel(refPanel.id) : false;
+  api.addPanel({
+    id: panelId,
+    component: "card",
+    title: `卡片 · ${basename(path)}`,
+    params: { path },
+    ...(refExists && refPanel
+      ? { position: { referencePanel: refPanel.id, direction: "within" as const } }
+      : {}),
+  });
 }
 
 export function consumePendingJump(path: string) {

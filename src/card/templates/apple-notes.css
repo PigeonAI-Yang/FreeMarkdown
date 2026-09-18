@@ -1,0 +1,223 @@
+/* 苹果备忘录模板：白底卡 + 顶部日期行 + 标题黄色高亮带。
+   优先级契约：body .tpl-apple-notes .markdown-body（0,2,2）必赢
+   md-theme-vars.css 的 html[data-theme] .markdown-body（0,2,1），卡片不随 app 明暗主题变化。 */
+
+/* ---- 卡片本体与装饰层变量 ---- */
+body .tpl-apple-notes {
+  --bgColor-default: #ffffff;
+  --bgColor-muted: #f5f5f7;
+  --bgColor-neutral-muted: #ececf0;
+  --fgColor-default: #1d1d1f;
+  --fgColor-muted: #86868b;
+  --fgColor-accent: #0066cc;
+  --borderColor-default: #e5e5ea;
+  --borderColor-muted: #e5e5ea;
+
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    0 14px 36px rgba(0, 0, 0, 0.08);
+  padding: 34px 46px 40px;
+  color: #1d1d1f;
+  font-family: "SF Pro Display", "Segoe UI Variable Display", "Segoe UI",
+    "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+}
+
+body .tpl-apple-notes .tpl-apple-frame {
+  display: block;
+}
+
+/* 顶部日期行：11px 灰 */
+body .tpl-apple-notes .tpl-apple-date {
+  font-size: 11px;
+  line-height: 1.4;
+  color: #86868b;
+  letter-spacing: 0.03em;
+  margin-bottom: 18px;
+}
+
+/* ---- 内容主题变量（明色定版，含代码高亮） ---- */
+body .tpl-apple-notes .markdown-body {
+  color-scheme: light;
+  --bgColor-default: #ffffff;
+  --bgColor-muted: #f5f5f7;
+  --bgColor-neutral-muted: #ececf0;
+  --fgColor-default: #1d1d1f;
+  --fgColor-muted: #86868b;
+  --fgColor-accent: #0066cc;
+  --borderColor-default: #e5e5ea;
+  --borderColor-muted: #e5e5ea;
+  /* 代码高亮变量：逐值对齐 md-theme-vars.css html[data-theme="light"] 浅色盘 */
+  --color-prettylights-syntax-brackethighlighter-angle: #59636e;
+  --color-prettylights-syntax-brackethighlighter-unmatched: #82071e;
+  --color-prettylights-syntax-carriage-return-bg: #cf222e;
+  --color-prettylights-syntax-carriage-return-text: #f6f8fa;
+  --color-prettylights-syntax-comment: #59636e;
+  --color-prettylights-syntax-constant-other-reference-link: #0a3069;
+  --color-prettylights-syntax-constant: #0550ae;
+  --color-prettylights-syntax-entity-tag: #0550ae;
+  --color-prettylights-syntax-entity: #6639ba;
+  --color-prettylights-syntax-invalid-illegal-bg: #ffebe9;
+  --color-prettylights-syntax-invalid-illegal-text: #d1242f;
+  --color-prettylights-syntax-keyword: #cf222e;
+  --color-prettylights-syntax-markup-bold: #1f2328;
+  --color-prettylights-syntax-markup-changed-bg: #ffd8b5;
+  --color-prettylights-syntax-markup-changed-text: #953800;
+  --color-prettylights-syntax-markup-deleted-bg: #ffebe9;
+  --color-prettylights-syntax-markup-deleted-text: #82071e;
+  --color-prettylights-syntax-markup-heading: #0550ae;
+  --color-prettylights-syntax-markup-ignored-bg: #0550ae;
+  --color-prettylights-syntax-markup-ignored-text: #d1d9e0;
+  --color-prettylights-syntax-markup-inserted-bg: #dafbe1;
+  --color-prettylights-syntax-markup-inserted-text: #116329;
+  --color-prettylights-syntax-markup-italic: #1f2328;
+  --color-prettylights-syntax-markup-list: #3b2300;
+  --color-prettylights-syntax-meta-diff-range: #8250df;
+  --color-prettylights-syntax-storage-modifier-import: #1f2328;
+  --color-prettylights-syntax-string-regexp: #116329;
+  --color-prettylights-syntax-string: #0a3069;
+  --color-prettylights-syntax-sublimelinter-gutter-mark: #818b98;
+  --color-prettylights-syntax-variable: #953800;
+
+  background: transparent;
+  color: #1d1d1f;
+  font-family: inherit;
+  line-height: 1.7;
+}
+
+/* ---- 标题：黄色高亮带（display:table 让色带贴合文字宽度） ---- */
+body .tpl-apple-notes .markdown-body h1,
+body .tpl-apple-notes .markdown-body h2 {
+  display: table;
+  border-bottom: none;
+  padding-bottom: 3px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  background-image: linear-gradient(
+    180deg,
+    transparent 62%,
+    #ffe27a 62%,
+    #ffe27a 96%,
+    transparent 96%
+  );
+}
+
+body .tpl-apple-notes .markdown-body h1 {
+  font-size: 1.6em;
+  margin-top: 1.2em;
+  margin-bottom: 0.7em;
+}
+
+body .tpl-apple-notes .markdown-body h2 {
+  font-size: 1.28em;
+  margin-top: 1.6em;
+  margin-bottom: 0.6em;
+}
+
+body .tpl-apple-notes .markdown-body h3 {
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+/* ---- 链接 ---- */
+body .tpl-apple-notes .markdown-body a {
+  color: #0066cc;
+}
+
+/* ---- 行内代码 ---- */
+body .tpl-apple-notes .markdown-body :not(pre) > code {
+  background-color: #ececf0;
+  color: #1d1d1f;
+  font-size: 0.82em;
+}
+
+/* ---- 引用 ---- */
+body .tpl-apple-notes .markdown-body blockquote {
+  color: #6e6e73;
+  border-left: 3px solid #d2d2d7;
+  padding: 2px 16px;
+}
+
+/* ---- 分隔线 ---- */
+body .tpl-apple-notes .markdown-body hr {
+  height: 1px;
+  background-color: #e5e5ea;
+  margin: 26px 0;
+}
+
+/* ---- 表格 ---- */
+body .tpl-apple-notes .markdown-body th {
+  font-weight: 600;
+}
+
+/* ---- 代码块高亮：hljs token 逐值取用上方浅色盘变量（不随 app 明暗主题
+   翻转——全局 :root[data-theme="dark"] .hljs-* 规则会把暗色 token
+   套在浅底上导致近乎隐形），特异性 (0,3,1) 压过全局 (0,3,0) ---- */
+body .tpl-apple-notes .markdown-body .hljs {
+  color: var(--color-prettylights-syntax-markup-bold);
+}
+
+body .tpl-apple-notes .markdown-body .hljs-comment,
+body .tpl-apple-notes .markdown-body .hljs-quote {
+  color: var(--color-prettylights-syntax-comment);
+}
+
+body .tpl-apple-notes .markdown-body .hljs-keyword,
+body .tpl-apple-notes .markdown-body .hljs-doctag,
+body .tpl-apple-notes .markdown-body .hljs-template-keyword,
+body .tpl-apple-notes .markdown-body .hljs-type {
+  color: var(--color-prettylights-syntax-keyword);
+}
+
+body .tpl-apple-notes .markdown-body .hljs-string,
+body .tpl-apple-notes .markdown-body .hljs-regexp,
+body .tpl-apple-notes .markdown-body .hljs-addition {
+  color: var(--color-prettylights-syntax-string);
+}
+
+body .tpl-apple-notes .markdown-body .hljs-number,
+body .tpl-apple-notes .markdown-body .hljs-literal,
+body .tpl-apple-notes .markdown-body .hljs-variable,
+body .tpl-apple-notes .markdown-body .hljs-template-variable {
+  color: var(--color-prettylights-syntax-constant);
+}
+
+body .tpl-apple-notes .markdown-body .hljs-title,
+body .tpl-apple-notes .markdown-body .hljs-title.function_,
+body .tpl-apple-notes .markdown-body .hljs-section {
+  color: var(--color-prettylights-syntax-meta-diff-range);
+}
+
+body .tpl-apple-notes .markdown-body .hljs-title.class_,
+body .tpl-apple-notes .markdown-body .hljs-attr,
+body .tpl-apple-notes .markdown-body .hljs-attribute,
+body .tpl-apple-notes .markdown-body .hljs-name {
+  color: var(--color-prettylights-syntax-variable);
+}
+
+body .tpl-apple-notes .markdown-body .hljs-built_in,
+body .tpl-apple-notes .markdown-body .hljs-symbol {
+  color: var(--color-prettylights-syntax-entity);
+}
+
+body .tpl-apple-notes .markdown-body .hljs-deletion {
+  color: var(--color-prettylights-syntax-markup-deleted-text);
+}
+
+body .tpl-apple-notes .markdown-body .hljs-meta,
+body .tpl-apple-notes .markdown-body .hljs-selector-tag {
+  color: var(--color-prettylights-syntax-string-regexp);
+}
+
+/* ---- 列表：恢复 UA 默认符号。根因：Tailwind preflight 全局
+   ul,ol { list-style: none } 抵消了浏览器默认圆点/数字，
+   github-markdown-css 只定义嵌套层级变体、未还原顶层符号。
+   list-style 可继承，.task-list-item 自身的 none 规则不受影响 ---- */
+body .tpl-apple-notes .markdown-body ul {
+  list-style: disc;
+}
+
+body .tpl-apple-notes .markdown-body ol {
+  list-style: decimal;
+}

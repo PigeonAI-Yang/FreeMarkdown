@@ -1,0 +1,220 @@
+/* 终端模板：#0d1117 深底 + 全等宽 + 绿色强调。
+   优先级契约：body .tpl-terminal .markdown-body（0,2,2）必赢
+   md-theme-vars.css 的 html[data-theme] .markdown-body（0,2,1），卡片不随 app 明暗主题变化。 */
+
+/* ---- 卡片本体与装饰层变量 ---- */
+body .tpl-terminal {
+  --bgColor-default: #0d1117;
+  --bgColor-muted: #161b22;
+  --bgColor-neutral-muted: #6e768166;
+  --fgColor-default: #e6edf3;
+  --fgColor-muted: #8b949e;
+  --fgColor-accent: #79c0ff;
+  --borderColor-default: #30363d;
+  --borderColor-muted: #21262d;
+
+  background: #0d1117;
+  border: 1px solid #21262d;
+  border-radius: 10px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  padding: 30px 36px 26px;
+  color: #e6edf3;
+  font-family: "Cascadia Code", "Cascadia Mono", Consolas, monospace;
+}
+
+/* 框架：内容撑满、页脚贴底 */
+body .tpl-terminal .tpl-term-frame {
+  display: flex;
+  flex-direction: column;
+}
+
+body .tpl-terminal .tpl-term-frame > .markdown-body {
+  flex: 1 1 auto;
+}
+
+/* 顶部终端窗口圆点 */
+body .tpl-terminal .tpl-term-dots {
+  flex: none;
+  display: flex;
+  gap: 7px;
+  margin-bottom: 18px;
+}
+
+body .tpl-terminal .tpl-term-dots i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+body .tpl-terminal .tpl-term-dots i:nth-child(1) {
+  background: #f85149;
+}
+
+body .tpl-terminal .tpl-term-dots i:nth-child(2) {
+  background: #d29922;
+}
+
+body .tpl-terminal .tpl-term-dots i:nth-child(3) {
+  background: #3fb950;
+}
+
+/* 页脚：等宽小字提示符路径 */
+body .tpl-terminal .tpl-term-footer {
+  flex: none;
+  margin-top: 26px;
+  padding-top: 14px;
+  border-top: 1px dashed #21262d;
+  font-size: 12px;
+  color: #8b949e;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+body .tpl-terminal .tpl-term-path {
+  color: #7ee787;
+}
+
+body .tpl-terminal .tpl-term-doc {
+  color: #e6edf3;
+}
+
+/* ---- 内容主题变量（暗色定版，含代码高亮） ---- */
+body .tpl-terminal .markdown-body {
+  color-scheme: dark;
+  --bgColor-default: #0d1117;
+  --bgColor-muted: #161b22;
+  --bgColor-neutral-muted: #6e768166;
+  --fgColor-default: #e6edf3;
+  --fgColor-muted: #8b949e;
+  --fgColor-accent: #79c0ff;
+  --borderColor-default: #30363d;
+  --borderColor-muted: #21262d;
+  --color-prettylights-syntax-brackethighlighter-angle: #9a9aa2;
+  --color-prettylights-syntax-brackethighlighter-unmatched: #f85149;
+  --color-prettylights-syntax-carriage-return-bg: #b62324;
+  --color-prettylights-syntax-carriage-return-text: #f0f6fc;
+  --color-prettylights-syntax-comment: #9a9aa2;
+  --color-prettylights-syntax-constant-other-reference-link: #a5d6ff;
+  --color-prettylights-syntax-constant: #79c0ff;
+  --color-prettylights-syntax-entity-tag: #7ee787;
+  --color-prettylights-syntax-entity: #d2a8ff;
+  --color-prettylights-syntax-invalid-illegal-bg: #8e1519;
+  --color-prettylights-syntax-invalid-illegal-text: #f85149;
+  --color-prettylights-syntax-keyword: #ff7b72;
+  --color-prettylights-syntax-markup-bold: #f0f6fc;
+  --color-prettylights-syntax-markup-changed-bg: #5a1e02;
+  --color-prettylights-syntax-markup-changed-text: #ffdfb6;
+  --color-prettylights-syntax-markup-deleted-bg: #67060c;
+  --color-prettylights-syntax-markup-deleted-text: #ffdcd7;
+  --color-prettylights-syntax-markup-heading: #1f6feb;
+  --color-prettylights-syntax-markup-inserted-bg: #033a16;
+  --color-prettylights-syntax-markup-inserted-text: #aff5b4;
+  --color-prettylights-syntax-list: #f2cc60;
+  --color-prettylights-syntax-string-regexp: #7ee787;
+  --color-prettylights-syntax-string: #a5d6ff;
+  --color-prettylights-syntax-sublimelinter-gutter-mark: #43434b;
+  --color-prettylights-syntax-variable: #ffa657;
+
+  background: transparent;
+  color: #e6edf3;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+/* 正文与代码统一等宽字体 */
+body .tpl-terminal .markdown-body code,
+body .tpl-terminal .markdown-body kbd,
+body .tpl-terminal .markdown-body pre,
+body .tpl-terminal .markdown-body samp {
+  font-family: inherit;
+}
+
+/* ---- 标题：绿色井号前缀 ---- */
+body .tpl-terminal .markdown-body h1,
+body .tpl-terminal .markdown-body h2,
+body .tpl-terminal .markdown-body h3,
+body .tpl-terminal .markdown-body h4 {
+  border-bottom: none;
+  padding-bottom: 0;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+body .tpl-terminal .markdown-body h1::before,
+body .tpl-terminal .markdown-body h2::before,
+body .tpl-terminal .markdown-body h3::before {
+  color: #7ee787;
+  margin-right: 2px;
+}
+
+body .tpl-terminal .markdown-body h1::before {
+  content: "# ";
+}
+
+body .tpl-terminal .markdown-body h2::before {
+  content: "## ";
+}
+
+body .tpl-terminal .markdown-body h3::before {
+  content: "### ";
+}
+
+body .tpl-terminal .markdown-body h1 {
+  font-size: 1.5em;
+  margin-top: 1.3em;
+  margin-bottom: 0.7em;
+}
+
+body .tpl-terminal .markdown-body h2 {
+  font-size: 1.25em;
+  margin-top: 1.6em;
+  margin-bottom: 0.6em;
+}
+
+body .tpl-terminal .markdown-body h3 {
+  font-size: 1.08em;
+}
+
+/* ---- 链接 ---- */
+body .tpl-terminal .markdown-body a {
+  color: #79c0ff;
+}
+
+/* ---- 行内代码 ---- */
+body .tpl-terminal .markdown-body :not(pre) > code {
+  background-color: #6e768166;
+  color: #e6edf3;
+  font-size: 0.85em;
+}
+
+/* ---- 引用：左侧绿色边框 ---- */
+body .tpl-terminal .markdown-body blockquote {
+  color: #8b949e;
+  border-left: 3px solid #7ee787;
+  padding: 2px 16px;
+}
+
+/* ---- 分隔线 ---- */
+body .tpl-terminal .markdown-body hr {
+  height: 1px;
+  background-color: #30363d;
+  margin: 24px 0;
+}
+
+/* ---- 强调 ---- */
+body .tpl-terminal .markdown-body strong {
+  color: #7ee787;
+}
+
+/* ---- 列表：恢复 UA 默认符号（Tailwind preflight 全局 list-style:none
+   抵消了浏览器默认圆点/数字；list-style 可继承，
+   .task-list-item 自身的 none 规则不受影响） ---- */
+body .tpl-terminal .markdown-body ul {
+  list-style: disc;
+}
+
+body .tpl-terminal .markdown-body ol {
+  list-style: decimal;
+}

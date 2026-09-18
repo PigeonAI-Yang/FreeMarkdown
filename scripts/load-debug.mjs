@@ -1,0 +1,11 @@
+import CDP from "chrome-remote-interface";
+const client = await CDP({ port: 9223, wait: true });
+const { Runtime, Log, Page } = client;
+await Log.enable(); await Runtime.enable(); await Page.enable();
+const errors = [];
+Log.entryAdded((e) => errors.push('[' + e.entry.level + '] ' + e.entry.text.slice(0, 250)));
+Runtime.exceptionThrown((e) => errors.push('EXC: ' + (e.exceptionDetails?.text ?? '').slice(0, 150) + ' || ' + (e.exceptionDetails?.exception?.description ?? '').slice(0, 400)));
+await Page.reload({ ignoreCache: true });
+await new Promise(r => setTimeout(r, 9000));
+console.log(errors.length ? errors.slice(0, 10).join('\n---\n') : 'NO-ERRORS');
+client.close();

@@ -1,0 +1,159 @@
+/* 卡片导出面板：控制栏 + 预览舞台。
+   卡片本体独立于 app 明暗主题（模板自带定版配色，兜底底色取模板 shellBg）。 */
+
+.card-panel {
+  display: grid;
+  grid-template-columns: 264px minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+  background: var(--bg);
+  color: var(--text-1);
+}
+
+/* ---- 左侧控制栏 ---- */
+.card-controls {
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.card-field-label {
+  color: var(--text-3);
+  user-select: none;
+}
+
+.card-input {
+  height: 26px;
+  padding: 0 6px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-elev);
+  color: var(--text-1);
+  min-width: 0;
+}
+
+.card-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.card-input:disabled {
+  opacity: 0.5;
+}
+
+.card-range {
+  accent-color: var(--accent);
+  width: 100%;
+}
+
+/* ---- 右侧预览区 ---- */
+.card-preview {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* 中性灰棋盘舞台：与任何模板底色都可区分 */
+.card-stage {
+  position: relative;
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+  background: repeating-conic-gradient(#e7e8ec 0% 25%, #dcdee3 0% 50%) 50% / 24px 24px;
+}
+
+/* 加载 / 空文档 / 失败三态 */
+.card-msg {
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 40px;
+  text-align: center;
+}
+
+/*
+ * 缩放容器：布局盒显式等于缩放后尺寸（内联样式给定），
+ * 卡片本体在盒内先水平居中，再以 top center 为原点收缩，
+ * 视觉矩形恰好与布局盒重合 —— 无残留滚动盲区，也无需第二层包装。
+ */
+.card-scale {
+  flex: none;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  /* 禁止交叉轴 stretch：卡片本体高度必须由内容决定，
+     否则 root 被拉伸成布局盒高度，测量（longH/chrome）与捕获都会被锁死 */
+  align-items: flex-start;
+}
+
+/*
+ * 卡片捕获根（= rootEl）。
+ * 背景与定位都用 :where() 零特异性书写：任何模板规则
+ * （body .tpl-xxx，特异性更高）都能直接覆盖这里的兜底值。
+ */
+:where(.card-root) {
+  position: relative;
+  flex: none;
+  background: var(--card-root-bg, #ffffff);
+  font-family: var(--font-sans);
+}
+
+/* 内容视口：拆卡时高度/位移由脚本命令式设置，这里只负责裁切 */
+.card-viewport {
+  position: relative;
+  overflow: hidden;
+}
+
+/* 水印覆盖层：pointer-events 放行点击，随卡导出 */
+.card-watermark {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  white-space: nowrap;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--card-accent, #808080);
+}
+
+/* ---- 底部操作条 ---- */
+.card-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-elev);
+}
+
+.card-pager {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+}
+
+.card-status {
+  max-width: 420px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--text-3);
+}

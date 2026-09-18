@@ -1,5 +1,14 @@
 import { api } from "./ipc";
 import { appStore, scrollMap } from "./store";
+import {
+  cardStore,
+  DEFAULT_CARD_SETTINGS,
+  setCardSaveHook,
+} from "../card/cardStore";
+import type { CardSettings } from "../card/templates/types";
+
+// 卡片选项变更 → 会话防抖保存（cardStore 不反向 import session，避免循环依赖）
+setCardSaveHook(sessionMarkDirty);
 
 export interface WindowState {
   width: number;
@@ -20,6 +29,8 @@ export interface SessionData {
   tocVisible: boolean;
   searchRoot: string | null;
   window: WindowState | null;
+  /** 卡片导出选项（新增字段，缺省合并默认值，不改版本号） */
+  card: CardSettings;
 }
 
 const DEFAULTS: SessionData = {
@@ -37,6 +48,7 @@ const DEFAULTS: SessionData = {
   tocVisible: true,
   searchRoot: null,
   window: null,
+  card: { ...DEFAULT_CARD_SETTINGS },
 };
 
 export async function loadSession(): Promise<SessionData> {
@@ -45,7 +57,12 @@ export async function loadSession(): Promise<SessionData> {
     if (!raw) return { ...DEFAULTS };
     const data = JSON.parse(raw) as SessionData;
     if (data?.version !== 1) return { ...DEFAULTS };
-    return { ...DEFAULTS, ...data };
+    return {
+      ...DEFAULTS,
+      ...data,
+      // 嵌套字段与默认值逐层合并，兼容旧会话缺少 card 字段
+      card: { ...DEFAULT_CARD_SETTINGS, ...(data.card ?? {}) },
+    };
   } catch {
     return { ...DEFAULTS };
   }
@@ -66,6 +83,7 @@ export function sessionPayload(layout: unknown, window: WindowState | null): Ses
     tocVisible: s.tocVisible,
     searchRoot: s.searchRoot,
     window,
+    card: cardStore.get(),
   };
 }
 
@@ -77,11 +95,11 @@ async function currentWindowState(): Promise<WindowState | null> {
     const dpr = await w.scaleFactor();
     const maximized = await w.isMaximized();
     if (maximized) return { width: 1440, height: 900, maximized };
-    return {
-      width: Math.round(physical.width / dpr),
-      height: Math.round(physical.height / dpr),
-      maximized,
-    };
+    const width = Math.round(physical.width / dpr);
+    const height = Math.round(physical.height / dpr);
+    // 最小化/未就绪时会读到 0 或极小尺寸，直接丢弃，不污染 session
+    if (width <= 100 || height <= 100) return null;
+    return { width, height, maximized };
   } catch {
     return null;
   }

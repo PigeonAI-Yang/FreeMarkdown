@@ -1,0 +1,214 @@
+/* Notion 简约模板：白底黑白灰 + #f7f6f3 行内代码 + h1 底部细线。
+   优先级契约：body .tpl-notion-clean .markdown-body（0,2,2）必赢
+   md-theme-vars.css 的 html[data-theme] .markdown-body（0,2,1），卡片不随 app 明暗主题变化。 */
+
+/* ---- 卡片本体与装饰层变量 ---- */
+body .tpl-notion-clean {
+  --bgColor-default: #ffffff;
+  --bgColor-muted: #f7f7f5;
+  --bgColor-neutral-muted: #f7f6f3;
+  --fgColor-default: #37352f;
+  --fgColor-muted: #787774;
+  --fgColor-accent: #37352f;
+  --borderColor-default: #e9e9e7;
+  --borderColor-muted: #ececea;
+
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 46px 56px 36px;
+  color: #37352f;
+  font-family: ui-sans-serif, "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+
+/* 框架：内容撑满、页脚贴底 */
+body .tpl-notion-clean .tpl-nc-frame {
+  display: flex;
+  flex-direction: column;
+}
+
+body .tpl-notion-clean .tpl-nc-frame > .markdown-body {
+  flex: 1 1 auto;
+}
+
+/* 页脚：细线 + 灰色小字 */
+body .tpl-notion-clean .tpl-nc-footer {
+  flex: none;
+  text-align: center;
+  margin-top: 34px;
+  padding-top: 14px;
+  border-top: 1px solid #efefed;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: #9b9a97;
+}
+
+/* ---- 内容主题变量（明色定版，含代码高亮） ---- */
+body .tpl-notion-clean .markdown-body {
+  color-scheme: light;
+  --bgColor-default: #ffffff;
+  --bgColor-muted: #f7f7f5;
+  --bgColor-neutral-muted: #f7f6f3;
+  --fgColor-default: #37352f;
+  --fgColor-muted: #787774;
+  --fgColor-accent: #37352f;
+  --borderColor-default: #e9e9e7;
+  --borderColor-muted: #ececea;
+  /* 代码高亮变量：逐值对齐 md-theme-vars.css html[data-theme="light"] 浅色盘 */
+  --color-prettylights-syntax-brackethighlighter-angle: #59636e;
+  --color-prettylights-syntax-brackethighlighter-unmatched: #82071e;
+  --color-prettylights-syntax-carriage-return-bg: #cf222e;
+  --color-prettylights-syntax-carriage-return-text: #f6f8fa;
+  --color-prettylights-syntax-comment: #59636e;
+  --color-prettylights-syntax-constant-other-reference-link: #0a3069;
+  --color-prettylights-syntax-constant: #0550ae;
+  --color-prettylights-syntax-entity-tag: #0550ae;
+  --color-prettylights-syntax-entity: #6639ba;
+  --color-prettylights-syntax-invalid-illegal-bg: #ffebe9;
+  --color-prettylights-syntax-invalid-illegal-text: #d1242f;
+  --color-prettylights-syntax-keyword: #cf222e;
+  --color-prettylights-syntax-markup-bold: #1f2328;
+  --color-prettylights-syntax-markup-changed-bg: #ffd8b5;
+  --color-prettylights-syntax-markup-changed-text: #953800;
+  --color-prettylights-syntax-markup-deleted-bg: #ffebe9;
+  --color-prettylights-syntax-markup-deleted-text: #82071e;
+  --color-prettylights-syntax-markup-heading: #0550ae;
+  --color-prettylights-syntax-markup-ignored-bg: #0550ae;
+  --color-prettylights-syntax-markup-ignored-text: #d1d9e0;
+  --color-prettylights-syntax-markup-inserted-bg: #dafbe1;
+  --color-prettylights-syntax-markup-inserted-text: #116329;
+  --color-prettylights-syntax-markup-italic: #1f2328;
+  --color-prettylights-syntax-markup-list: #3b2300;
+  --color-prettylights-syntax-meta-diff-range: #8250df;
+  --color-prettylights-syntax-storage-modifier-import: #1f2328;
+  --color-prettylights-syntax-string-regexp: #116329;
+  --color-prettylights-syntax-string: #0a3069;
+  --color-prettylights-syntax-sublimelinter-gutter-mark: #818b98;
+  --color-prettylights-syntax-variable: #953800;
+
+  background: transparent;
+  color: #37352f;
+  font-family: inherit;
+  line-height: 1.65;
+}
+
+/* ---- 标题：h1 底部细线，h2 起无装饰 ---- */
+body .tpl-notion-clean .markdown-body h1 {
+  font-size: 1.7em;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ececea;
+  margin-top: 1.2em;
+  margin-bottom: 0.8em;
+}
+
+body .tpl-notion-clean .markdown-body h2 {
+  font-size: 1.32em;
+  font-weight: 700;
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-top: 1.8em;
+  margin-bottom: 0.55em;
+}
+
+body .tpl-notion-clean .markdown-body h3 {
+  font-size: 1.12em;
+  font-weight: 600;
+}
+
+/* ---- 链接：同色下划线（Notion 式） ---- */
+body .tpl-notion-clean .markdown-body a {
+  color: #37352f;
+  text-decoration-color: #bcbcb8;
+}
+
+/* ---- 行内代码：#f7f6f3 底 + Notion 红 ---- */
+body .tpl-notion-clean .markdown-body :not(pre) > code {
+  background-color: #f7f6f3;
+  color: #eb5757;
+  font-size: 0.8em;
+}
+
+/* ---- 引用 ---- */
+body .tpl-notion-clean .markdown-body blockquote {
+  color: #787774;
+  border-left: 3px solid #37352f;
+  padding: 2px 18px;
+}
+
+/* ---- 分隔线 ---- */
+body .tpl-notion-clean .markdown-body hr {
+  height: 1px;
+  background-color: #e9e9e7;
+  margin: 26px 0;
+}
+
+/* ---- 代码块高亮：hljs token 逐值取用上方浅色盘变量（不随 app 明暗主题
+   翻转——全局 :root[data-theme="dark"] .hljs-* 规则会把暗色 token
+   套在浅底上导致近乎隐形），特异性 (0,3,1) 压过全局 (0,3,0) ---- */
+body .tpl-notion-clean .markdown-body .hljs {
+  color: var(--color-prettylights-syntax-markup-bold);
+}
+
+body .tpl-notion-clean .markdown-body .hljs-comment,
+body .tpl-notion-clean .markdown-body .hljs-quote {
+  color: var(--color-prettylights-syntax-comment);
+}
+
+body .tpl-notion-clean .markdown-body .hljs-keyword,
+body .tpl-notion-clean .markdown-body .hljs-doctag,
+body .tpl-notion-clean .markdown-body .hljs-template-keyword,
+body .tpl-notion-clean .markdown-body .hljs-type {
+  color: var(--color-prettylights-syntax-keyword);
+}
+
+body .tpl-notion-clean .markdown-body .hljs-string,
+body .tpl-notion-clean .markdown-body .hljs-regexp,
+body .tpl-notion-clean .markdown-body .hljs-addition {
+  color: var(--color-prettylights-syntax-string);
+}
+
+body .tpl-notion-clean .markdown-body .hljs-number,
+body .tpl-notion-clean .markdown-body .hljs-literal,
+body .tpl-notion-clean .markdown-body .hljs-variable,
+body .tpl-notion-clean .markdown-body .hljs-template-variable {
+  color: var(--color-prettylights-syntax-constant);
+}
+
+body .tpl-notion-clean .markdown-body .hljs-title,
+body .tpl-notion-clean .markdown-body .hljs-title.function_,
+body .tpl-notion-clean .markdown-body .hljs-section {
+  color: var(--color-prettylights-syntax-meta-diff-range);
+}
+
+body .tpl-notion-clean .markdown-body .hljs-title.class_,
+body .tpl-notion-clean .markdown-body .hljs-attr,
+body .tpl-notion-clean .markdown-body .hljs-attribute,
+body .tpl-notion-clean .markdown-body .hljs-name {
+  color: var(--color-prettylights-syntax-variable);
+}
+
+body .tpl-notion-clean .markdown-body .hljs-built_in,
+body .tpl-notion-clean .markdown-body .hljs-symbol {
+  color: var(--color-prettylights-syntax-entity);
+}
+
+body .tpl-notion-clean .markdown-body .hljs-deletion {
+  color: var(--color-prettylights-syntax-markup-deleted-text);
+}
+
+body .tpl-notion-clean .markdown-body .hljs-meta,
+body .tpl-notion-clean .markdown-body .hljs-selector-tag {
+  color: var(--color-prettylights-syntax-string-regexp);
+}
+
+/* ---- 列表：恢复 UA 默认符号（Tailwind preflight 全局 list-style:none
+   抵消了浏览器默认圆点/数字；list-style 可继承，
+   .task-list-item 自身的 none 规则不受影响） ---- */
+body .tpl-notion-clean .markdown-body ul {
+  list-style: disc;
+}
+
+body .tpl-notion-clean .markdown-body ol {
+  list-style: decimal;
+}

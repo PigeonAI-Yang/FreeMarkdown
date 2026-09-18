@@ -1,5 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod card;
+mod filedrop;
 mod markdown;
 mod search;
 mod session;
@@ -102,6 +104,27 @@ fn open_external(app: tauri::AppHandle, url: String) -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
+/// 在 Windows 资源管理器中定位文件/目录（explorer /select,"<path>"）
+#[tauri::command]
+fn fs_reveal(path: String) -> Result<(), String> {
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        // /select, 后紧跟引号包裹的完整路径，是 explorer 可靠解析的写法
+        //（逗号与路径分开设参在含空格路径下不可靠）
+        std::process::Command::new("explorer")
+            .raw_arg(format!("/select,\"{}\"", path))
+            .spawn()
+            .map(|_| ())
+            .map_err(|e| e.to_string())
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = path;
+        Ok(())
+    }
+}
+
 #[tauri::command]
 fn startup_ms() -> u128 {
     process_start().elapsed().as_millis()
@@ -139,7 +162,22 @@ fn main() {
         }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_clipboard_manager::init())
         .manage(markdown::CacheState::new(64))
+        .setup(|app| {
+            // Windows 文件打开桥接（DOM File → 原生路径）
+            #[cfg(windows)]
+            {
+                if let Some(w) = app.get_webview_window("main") {
+                    let v: &tauri::Webview<_> = w.as_ref();
+                    let handle = app.handle().clone();
+                    if let Err(e) = filedrop::install(v, &handle) {
+                        eprintln!("[fileopen] setup install failed: {e}");
+                    }
+                }
+            }
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             markdown::read_markdown,
             fs_list_dir,
@@ -149,8 +187,14 @@ fn main() {
             session::session_save,
             session::session_load,
             open_external,
+            fs_reveal,
             startup_ms,
             perf_log,
+            card::system_fonts,
+            card::card_images_dataurl,
+            card::card_pick_save_path,
+            card::card_write_file,
+            card::card_clipboard_write_png,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

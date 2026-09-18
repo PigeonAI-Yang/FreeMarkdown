@@ -1,0 +1,248 @@
+/* 公众号文章模板：米白 #fdfdfb + 衬线 15px/1.9 + 链接 #576b95。
+   优先级契约：body .tpl-wechat-article .markdown-body（0,2,2）必赢
+   md-theme-vars.css 的 html[data-theme] .markdown-body（0,2,1），卡片不随 app 明暗主题变化。 */
+
+/* ---- 卡片本体与装饰层变量 ---- */
+body .tpl-wechat-article {
+  --bgColor-default: #fdfdfb;
+  --bgColor-muted: #f7f6f2;
+  --bgColor-neutral-muted: #f2f1ea;
+  --fgColor-default: #2f2f2c;
+  --fgColor-muted: #9b9b93;
+  --fgColor-accent: #576b95;
+  --borderColor-default: #e8e6e0;
+  --borderColor-muted: #e8e6e0;
+
+  background: #fdfdfb;
+  border-radius: 8px;
+  padding: 44px 52px 36px;
+  color: #2f2f2c;
+  font-family: "Georgia", "Noto Serif SC", "Source Han Serif SC", "SimSun", serif;
+}
+
+/* 框架：内容撑满、页脚贴底 */
+body .tpl-wechat-article .tpl-wechat-frame {
+  display: flex;
+  flex-direction: column;
+}
+
+body .tpl-wechat-article .tpl-wechat-frame > .markdown-body {
+  flex: 1 1 auto;
+}
+
+/* 「END」页脚：两侧细线 */
+body .tpl-wechat-article .tpl-wechat-footer {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 30px;
+}
+
+body .tpl-wechat-article .tpl-wechat-footer::before,
+body .tpl-wechat-article .tpl-wechat-footer::after {
+  content: "";
+  width: 56px;
+  height: 1px;
+  background: #e3e1d8;
+}
+
+body .tpl-wechat-article .tpl-wechat-end {
+  font-size: 11px;
+  letter-spacing: 0.35em;
+  text-indent: 0.35em;
+  color: #b5b2a8;
+}
+
+/* ---- 内容主题变量（明色定版，含代码高亮） ---- */
+body .tpl-wechat-article .markdown-body {
+  color-scheme: light;
+  --bgColor-default: #fdfdfb;
+  --bgColor-muted: #f7f6f2;
+  --bgColor-neutral-muted: #f2f1ea;
+  --fgColor-default: #2f2f2c;
+  --fgColor-muted: #9b9b93;
+  --fgColor-accent: #576b95;
+  --borderColor-default: #e8e6e0;
+  --borderColor-muted: #e8e6e0;
+  /* 代码高亮变量：逐值对齐 md-theme-vars.css html[data-theme="light"] 浅色盘 */
+  --color-prettylights-syntax-brackethighlighter-angle: #59636e;
+  --color-prettylights-syntax-brackethighlighter-unmatched: #82071e;
+  --color-prettylights-syntax-carriage-return-bg: #cf222e;
+  --color-prettylights-syntax-carriage-return-text: #f6f8fa;
+  --color-prettylights-syntax-comment: #59636e;
+  --color-prettylights-syntax-constant-other-reference-link: #0a3069;
+  --color-prettylights-syntax-constant: #0550ae;
+  --color-prettylights-syntax-entity-tag: #0550ae;
+  --color-prettylights-syntax-entity: #6639ba;
+  --color-prettylights-syntax-invalid-illegal-bg: #ffebe9;
+  --color-prettylights-syntax-invalid-illegal-text: #d1242f;
+  --color-prettylights-syntax-keyword: #cf222e;
+  --color-prettylights-syntax-markup-bold: #1f2328;
+  --color-prettylights-syntax-markup-changed-bg: #ffd8b5;
+  --color-prettylights-syntax-markup-changed-text: #953800;
+  --color-prettylights-syntax-markup-deleted-bg: #ffebe9;
+  --color-prettylights-syntax-markup-deleted-text: #82071e;
+  --color-prettylights-syntax-markup-heading: #0550ae;
+  --color-prettylights-syntax-markup-ignored-bg: #0550ae;
+  --color-prettylights-syntax-markup-ignored-text: #d1d9e0;
+  --color-prettylights-syntax-markup-inserted-bg: #dafbe1;
+  --color-prettylights-syntax-markup-inserted-text: #116329;
+  --color-prettylights-syntax-markup-italic: #1f2328;
+  --color-prettylights-syntax-markup-list: #3b2300;
+  --color-prettylights-syntax-meta-diff-range: #8250df;
+  --color-prettylights-syntax-storage-modifier-import: #1f2328;
+  --color-prettylights-syntax-string-regexp: #116329;
+  --color-prettylights-syntax-string: #0a3069;
+  --color-prettylights-syntax-sublimelinter-gutter-mark: #818b98;
+  --color-prettylights-syntax-variable: #953800;
+
+  background: transparent;
+  color: #2f2f2c;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.9;
+}
+
+/* 正文两端对齐，更贴近公众号排版 */
+body .tpl-wechat-article .markdown-body p {
+  text-align: justify;
+  margin-bottom: 1.1em;
+}
+
+/* ---- 标题：h1 居中带下划细线 ---- */
+body .tpl-wechat-article .markdown-body h1 {
+  position: relative;
+  text-align: center;
+  font-size: 1.55em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border-bottom: none;
+  padding-bottom: 16px;
+  margin-top: 1.1em;
+  margin-bottom: 1.1em;
+}
+
+body .tpl-wechat-article .markdown-body h1::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 48px;
+  height: 1px;
+  background: #cfccc2;
+}
+
+body .tpl-wechat-article .markdown-body h2 {
+  font-size: 1.25em;
+  font-weight: 600;
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-top: 1.8em;
+  margin-bottom: 0.7em;
+}
+
+body .tpl-wechat-article .markdown-body h3 {
+  font-size: 1.08em;
+  font-weight: 600;
+}
+
+/* ---- 链接 ---- */
+body .tpl-wechat-article .markdown-body a {
+  color: #576b95;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(87, 107, 149, 0.4);
+}
+
+/* ---- 行内代码 ---- */
+body .tpl-wechat-article .markdown-body :not(pre) > code {
+  background-color: #f2f1ea;
+  color: #a33b3b;
+  font-size: 0.8em;
+}
+
+/* ---- 引用 ---- */
+body .tpl-wechat-article .markdown-body blockquote {
+  color: #8a8a80;
+  border-left: 3px solid #d8d5cc;
+  padding: 4px 18px;
+}
+
+/* ---- 分隔线 ---- */
+body .tpl-wechat-article .markdown-body hr {
+  height: 1px;
+  background-color: #e8e6e0;
+  margin: 28px 0;
+}
+
+/* ---- 代码块高亮：hljs token 逐值取用上方浅色盘变量（不随 app 明暗主题
+   翻转——全局 :root[data-theme="dark"] .hljs-* 规则会把暗色 token
+   套在浅底上导致近乎隐形），特异性 (0,3,1) 压过全局 (0,3,0) ---- */
+body .tpl-wechat-article .markdown-body .hljs {
+  color: var(--color-prettylights-syntax-markup-bold);
+}
+
+body .tpl-wechat-article .markdown-body .hljs-comment,
+body .tpl-wechat-article .markdown-body .hljs-quote {
+  color: var(--color-prettylights-syntax-comment);
+}
+
+body .tpl-wechat-article .markdown-body .hljs-keyword,
+body .tpl-wechat-article .markdown-body .hljs-doctag,
+body .tpl-wechat-article .markdown-body .hljs-template-keyword,
+body .tpl-wechat-article .markdown-body .hljs-type {
+  color: var(--color-prettylights-syntax-keyword);
+}
+
+body .tpl-wechat-article .markdown-body .hljs-string,
+body .tpl-wechat-article .markdown-body .hljs-regexp,
+body .tpl-wechat-article .markdown-body .hljs-addition {
+  color: var(--color-prettylights-syntax-string);
+}
+
+body .tpl-wechat-article .markdown-body .hljs-number,
+body .tpl-wechat-article .markdown-body .hljs-literal,
+body .tpl-wechat-article .markdown-body .hljs-variable,
+body .tpl-wechat-article .markdown-body .hljs-template-variable {
+  color: var(--color-prettylights-syntax-constant);
+}
+
+body .tpl-wechat-article .markdown-body .hljs-title,
+body .tpl-wechat-article .markdown-body .hljs-title.function_,
+body .tpl-wechat-article .markdown-body .hljs-section {
+  color: var(--color-prettylights-syntax-meta-diff-range);
+}
+
+body .tpl-wechat-article .markdown-body .hljs-title.class_,
+body .tpl-wechat-article .markdown-body .hljs-attr,
+body .tpl-wechat-article .markdown-body .hljs-attribute,
+body .tpl-wechat-article .markdown-body .hljs-name {
+  color: var(--color-prettylights-syntax-variable);
+}
+
+body .tpl-wechat-article .markdown-body .hljs-built_in,
+body .tpl-wechat-article .markdown-body .hljs-symbol {
+  color: var(--color-prettylights-syntax-entity);
+}
+
+body .tpl-wechat-article .markdown-body .hljs-deletion {
+  color: var(--color-prettylights-syntax-markup-deleted-text);
+}
+
+body .tpl-wechat-article .markdown-body .hljs-meta,
+body .tpl-wechat-article .markdown-body .hljs-selector-tag {
+  color: var(--color-prettylights-syntax-string-regexp);
+}
+
+/* ---- 列表：恢复 UA 默认符号（Tailwind preflight 全局 list-style:none
+   抵消了浏览器默认圆点/数字；list-style 可继承，
+   .task-list-item 自身的 none 规则不受影响） ---- */
+body .tpl-wechat-article .markdown-body ul {
+  list-style: disc;
+}
+
+body .tpl-wechat-article .markdown-body ol {
+  list-style: decimal;
+}

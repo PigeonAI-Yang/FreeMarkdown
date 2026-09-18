@@ -1,0 +1,271 @@
+/* 设备外壳样式（.dshell- 前缀，全部纯 CSS 装饰，无图片/滤镜/绘制） */
+
+.dshell,
+.dshell *,
+.dshell *::before,
+.dshell *::after {
+  box-sizing: border-box;
+}
+
+/* 外壳宽度随父容器填满（模板纸边内内容盒），不再由调用方硬定宽 */
+.dshell {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ---- none：透明内衬 ---- */
+.dshell-none {
+  padding: 24px;
+  background: transparent;
+}
+
+/* ---- iPhone 机壳：黑色边框 + 灵动岛状态栏 + home indicator ---- */
+.dshell-iphone {
+  border: 12px solid #17181c;
+  border-radius: 54px;
+  background: #17181c;
+  box-shadow:
+    0 0 0 2px #3a3b40,
+    0 26px 52px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.dshell-screen {
+  display: flex;
+  flex-direction: column;
+  border-radius: 42px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+/* 状态栏 */
+.dshell-statusbar {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 46px;
+  padding: 10px 28px 0;
+  background: #ffffff;
+}
+
+.dshell-statusbar-time {
+  font-family: -apple-system, "Segoe UI", "Microsoft YaHei UI", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #1d1d1f;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 灵动岛：黑色胶囊 */
+.dshell-island {
+  position: absolute;
+  left: 50%;
+  top: 12px;
+  transform: translateX(-50%);
+  width: 96px;
+  height: 27px;
+  border-radius: 16px;
+  background: #000000;
+}
+
+.dshell-statusbar-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #1d1d1f;
+}
+
+/* 信号：四根渐高柱 */
+.dshell-signal {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.5px;
+  height: 11px;
+}
+
+.dshell-signal i {
+  width: 3px;
+  border-radius: 1px;
+  background: #1d1d1f;
+}
+
+.dshell-signal i:nth-child(1) {
+  height: 4px;
+}
+
+.dshell-signal i:nth-child(2) {
+  height: 6px;
+}
+
+.dshell-signal i:nth-child(3) {
+  height: 8.5px;
+}
+
+.dshell-signal i:nth-child(4) {
+  height: 11px;
+}
+
+/* WiFi：两层圆环弧 + 底部圆点（容器裁出上半弧） */
+.dshell-wifi {
+  position: relative;
+  width: 16px;
+  height: 11px;
+  overflow: hidden;
+  background: radial-gradient(circle 2.4px at 8px 10px, #1d1d1f 100%, transparent 0);
+}
+
+.dshell-wifi::before,
+.dshell-wifi::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 2px solid #1d1d1f;
+  border-radius: 50%;
+}
+
+.dshell-wifi::before {
+  width: 22px;
+  height: 22px;
+  top: 6px;
+}
+
+.dshell-wifi::after {
+  width: 13px;
+  height: 13px;
+  top: 8.5px;
+}
+
+/* 电池：描边壳 + 电量芯 + 正极帽 */
+.dshell-battery {
+  display: flex;
+  align-items: center;
+}
+
+.dshell-battery-body {
+  position: relative;
+  width: 23px;
+  height: 11.5px;
+  border: 1px solid rgba(29, 29, 31, 0.45);
+  border-radius: 3.5px;
+}
+
+.dshell-battery-body::before {
+  content: "";
+  position: absolute;
+  top: 1.5px;
+  bottom: 1.5px;
+  left: 1.5px;
+  width: 70%;
+  border-radius: 1.5px;
+  background: #1d1d1f;
+}
+
+.dshell-battery-cap {
+  width: 1.5px;
+  height: 4.5px;
+  margin-left: 1px;
+  border-radius: 0 2px 2px 0;
+  background: rgba(29, 29, 31, 0.45);
+}
+
+/* 内容区：位于状态栏与 home indicator 之间 */
+.dshell-content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* ---- 启用设备外壳时的模板纸面归属（.card-root--shell） ----
+   纸面（背景纹理 + 模板留白）由内容区承载；卡片根的纸色由组件内联清成透明
+   （模板规则 body .tpl-xxx 特异性更高，CSS 单类选择器压不住）。
+   原先纸面铺在卡片根上、外壳塞在卡片内边距里，模板的 padding 就成了设备
+   外面的一圈纸边（"背景顶到设备外面"），屏幕里的正文反而几乎没有留白。 */
+.card-root--shell .dshell-content {
+  /* 圆角/投影交给外壳自身，避免纸面在屏幕里再叠一层圆角与阴影 */
+  border-radius: 0;
+  box-shadow: none;
+  /* 纸面填满状态栏与 home 条之间的可用高度 */
+  height: 100%;
+}
+
+/* home indicator 横条 */
+.dshell-homebar-row {
+  flex: none;
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 8px;
+  background: #ffffff;
+}
+
+.dshell-homebar {
+  width: 120px;
+  height: 5px;
+  border-radius: 3px;
+  background: #1d1d1f;
+  opacity: 0.9;
+}
+
+/* ---- macOS 窗口：圆角 + 红绿灯工具条 ---- */
+.dshell-macos {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.16);
+  overflow: hidden;
+}
+
+.dshell-titlebar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 14px;
+  background: #f6f6f6;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+.dshell-dots {
+  display: flex;
+  gap: 8px;
+  width: 60px;
+  flex: none;
+}
+
+.dshell-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.dshell-dot-close {
+  background: #ff5f57;
+}
+
+.dshell-dot-min {
+  background: #febc2e;
+}
+
+.dshell-dot-max {
+  background: #28c840;
+}
+
+.dshell-titlebar-text {
+  flex: 1;
+  text-align: center;
+  font-family: -apple-system, "Segoe UI", "Microsoft YaHei UI", sans-serif;
+  font-size: 12px;
+  color: #8a8a8e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dshell-titlebar-pad {
+  width: 60px;
+  flex: none;
+}

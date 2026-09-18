@@ -6,6 +6,7 @@ import {
   actions,
   appStore,
   dockRef,
+  openCardPanel,
   openFile,
   setRootFolder,
   scrollMap,
@@ -17,9 +18,23 @@ import { Sidebar } from "./components/Sidebar";
 import { TocPanel } from "./components/TocPanel";
 import { SearchPanel } from "./components/SearchPanel";
 import { SettingsPage } from "./components/SettingsPage";
+import { ContextMenu } from "./components/ContextMenu";
+import { restoreCardSettings } from "./card/cardStore";
+import { useFileOpenBridge } from "./lib/filedrop";
 
 export default function App() {
+  return (
+    <>
+      <AppShell />
+      {/* 全局右键菜单：挂在根部，启动页/设置页分支外也生效 */}
+      <ContextMenu />
+    </>
+  );
+}
+
+function AppShell() {
   const app = useApp();
+  useFileOpenBridge();
   const [layout, setLayout] = useState<SerializedDockview | null>(null);
 
   /* ---------- 启动：加载会话，恢复主题/字号/现场 ---------- */
@@ -39,12 +54,18 @@ export default function App() {
         booted: true,
       });
       setLayout((session.layout as SerializedDockview) ?? null);
+      // 恢复卡片导出选项
+      restoreCardSettings(session.card);
 
       // 窗口尺寸恢复
       try {
         const w = getCurrentWindow();
         if (session.window?.maximized) await w.maximize();
-        else if (session.window)
+        else if (
+          session.window &&
+          session.window.width > 100 &&
+          session.window.height > 100
+        )
           await w.setSize(new LogicalSize(session.window.width, session.window.height));
       } catch {
         // 忽略窗口恢复失败
@@ -88,14 +109,35 @@ export default function App() {
         await w.destroy();
       }
     });
-    // 注：系统文件拖放（tauri://drag-drop）已停用。
-    // wry 注册窗口级 IDropTarget 后，Windows 上所有不带 CF_HDROP 的内部
-    // HTML5 拖拽都会被显示为禁止放置，dockview 标签分屏无法使用。
-    // 文件打开走工具栏按钮 / Ctrl+O / Ctrl+Shift+O。后续如需拖文件，
-    // 走 DOM + ICoreWebView2File.Path 路线另行验证。
-    const interval = setInterval(() => void saveSessionNow(dockRef.api?.toJSON()), 30_000);
+    // 原生文件拖放（dragDropEnabled=true）：只处理真实文件 drop，
+    // paths 为空的事件直接忽略，不干扰 dockview 内部拖拽。
+    const unDrop = w.onDragDropEvent((event) => {
+      if (event.payload.type !== "drop") return;
+      const paths = event.payload.paths;
+      if (!paths || paths.length === 0) return;
+      for (const p of paths) {
+        const lower = p.toLowerCase();
+        if (lower.endsWith(".md") || lower.endsWith(".markdown")) {
+          openFile(p);
+        } else {
+          // 可能是目录：尝试列目录，成功则设为根目录
+          void api.listDir(p).then(
+            () => setRootFolder(p),
+            () => {},
+          );
+        }
+      }
+    });
+    // 定时兜底保存：与 scheduleLayoutSave 同规则，空布局不保存——
+    // 否则恰好撞上面板全关的瞬间，就会把有效现场（布局+打开列表）覆盖成空。
+    const interval = setInterval(() => {
+      const api = dockRef.api;
+      if (!api || api.panels.length === 0) return;
+      void saveSessionNow(api.toJSON());
+    }, 30_000);
     return () => {
       void un;
+      void unDrop;
       clearInterval(interval);
     };
   }, []);
@@ -132,6 +174,11 @@ export default function App() {
       } else if (k === "f" && e.shiftKey) {
         e.preventDefault();
         appStore.set({ searchOpen: !appStore.get().searchOpen });
+      } else if (k === "e") {
+        e.preventDefault();
+        // 对活动文档打开卡片导出面板
+        const p = appStore.get().activePanelPath;
+        if (p) openCardPanel(p);
       } else if (k === "=" || k === "+") {
         e.preventDefault();
         bumpFont(1);
@@ -150,7 +197,8 @@ export default function App() {
 
   if (!app.booted) {
     return (
-      <div className="flex h-full items-center justify-center bg-bg text-text-3">
+      <div className="flex h-full flex-col items-center justify-center gap-3 bg-bg text-text-3">
+        <img src="/freemarkdown-icon.svg" width={64} height={64} alt="FreeMarkdown" />
         <span className="animate-pulse text-[15px] font-medium">FreeMarkdown</span>
       </div>
     );
@@ -172,7 +220,8 @@ export default function App() {
         <Sidebar />
         <TocPanel />
         <main className="min-w-0 flex-1">
-          <DockHost layout={layout} />
+          {/* key = 网格代数：网格损坏时 +1，换一个全新的 dockview 实例 */}
+          <DockHost key={app.gridEpoch} layout={layout} />
         </main>
       </div>
       <SearchPanel />
@@ -244,6 +293,16 @@ function ToolBar() {
       >
         <IconSearch />
       </button>
+      <button
+        className="icon-btn"
+        onClick={() => {
+          const p = appStore.get().activePanelPath;
+          if (p) openCardPanel(p);
+        }}
+        title="卡片导出 (Ctrl+E)"
+      >
+        <IconCard />
+      </button>
 
       <div className="mx-1 h-5 w-px bg-border-app" />
 
@@ -296,6 +355,15 @@ function IconSearch() {
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <circle cx="11" cy="11" r="6" />
       <path d="M20 20l-4.5-4.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+function IconCard() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <circle cx="9" cy="10" r="1.6" />
+      <path d="M3 17l5-4.5 4 3.5 3.5-3L21 17" strokeLinejoin="round" />
     </svg>
   );
 }

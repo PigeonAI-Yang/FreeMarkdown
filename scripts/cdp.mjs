@@ -103,6 +103,12 @@ await withTab(async ({ Runtime, Page, errors }) => {
       console.log("console-errors:", JSON.stringify(errors.slice(0, 10)));
       break;
     }
+    case "reload": {
+      await Page.enable();
+      await Page.reload({ ignoreCache: true });
+      console.log("reload sent");
+      break;
+    }
     case "shot": {
       await Page.enable();
       const { data } = await Page.captureScreenshot({ format: "png" });

@@ -1,0 +1,276 @@
+/* 复古纸张模板：#f6efdf 纸面 + repeating-linear-gradient 细横纹 + 深棕衬线。
+   优先级契约：body .tpl-vintage-paper .markdown-body（0,2,2）必赢
+   md-theme-vars.css 的 html[data-theme] .markdown-body（0,2,1），卡片不随 app 明暗主题变化。 */
+
+/* ---- 卡片本体与装饰层变量 ---- */
+body .tpl-vintage-paper {
+  --bgColor-default: #f6efdf;
+  --bgColor-muted: #efe6d0;
+  --bgColor-neutral-muted: #e9ddc4;
+  --fgColor-default: #4a3b28;
+  --fgColor-muted: #8a7a5f;
+  --fgColor-accent: #8c5a2b;
+  --borderColor-default: #d9c9a8;
+  --borderColor-muted: #d9c9a8;
+
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 27px,
+      rgba(74, 59, 40, 0.045) 27px,
+      rgba(74, 59, 40, 0.045) 28px
+    ),
+    #f6efdf;
+  border: 1px solid #e5d9bf;
+  border-radius: 4px;
+  box-shadow: inset 0 0 46px rgba(122, 96, 57, 0.09);
+  padding: 42px 52px 36px;
+  color: #4a3b28;
+  font-family: "Georgia", "Noto Serif SC", "Source Han Serif SC", "SimSun", serif;
+}
+
+/* 框架：内容撑满、页脚贴底 */
+body .tpl-vintage-paper .tpl-vp-frame {
+  display: flex;
+  flex-direction: column;
+}
+
+body .tpl-vintage-paper .tpl-vp-frame > .markdown-body {
+  flex: 1 1 auto;
+}
+
+/* 顶部饰线眉标：线 — ❖ — 线 */
+body .tpl-vintage-paper .tpl-vp-ornament {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: #a3814f;
+  font-size: 12px;
+  line-height: 1;
+  margin-bottom: 24px;
+}
+
+body .tpl-vintage-paper .tpl-vp-ornament::before,
+body .tpl-vintage-paper .tpl-vp-ornament::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #d9c9a8;
+}
+
+/* 页脚 */
+body .tpl-vintage-paper .tpl-vp-footer {
+  flex: none;
+  text-align: center;
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid #e5d9bf;
+}
+
+body .tpl-vintage-paper .tpl-vp-brand {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: #8a7a5f;
+}
+
+/* ---- 内容主题变量（明色定版，含代码高亮） ---- */
+body .tpl-vintage-paper .markdown-body {
+  color-scheme: light;
+  --bgColor-default: #f6efdf;
+  --bgColor-muted: #efe6d0;
+  --bgColor-neutral-muted: #e9ddc4;
+  --fgColor-default: #4a3b28;
+  --fgColor-muted: #8a7a5f;
+  --fgColor-accent: #8c5a2b;
+  --borderColor-default: #d9c9a8;
+  --borderColor-muted: #d9c9a8;
+  /* 代码高亮变量：逐值对齐 md-theme-vars.css html[data-theme="light"] 浅色盘 */
+  --color-prettylights-syntax-brackethighlighter-angle: #59636e;
+  --color-prettylights-syntax-brackethighlighter-unmatched: #82071e;
+  --color-prettylights-syntax-carriage-return-bg: #cf222e;
+  --color-prettylights-syntax-carriage-return-text: #f6f8fa;
+  --color-prettylights-syntax-comment: #59636e;
+  --color-prettylights-syntax-constant-other-reference-link: #0a3069;
+  --color-prettylights-syntax-constant: #0550ae;
+  --color-prettylights-syntax-entity-tag: #0550ae;
+  --color-prettylights-syntax-entity: #6639ba;
+  --color-prettylights-syntax-invalid-illegal-bg: #ffebe9;
+  --color-prettylights-syntax-invalid-illegal-text: #d1242f;
+  --color-prettylights-syntax-keyword: #cf222e;
+  --color-prettylights-syntax-markup-bold: #1f2328;
+  --color-prettylights-syntax-markup-changed-bg: #ffd8b5;
+  --color-prettylights-syntax-markup-changed-text: #953800;
+  --color-prettylights-syntax-markup-deleted-bg: #ffebe9;
+  --color-prettylights-syntax-markup-deleted-text: #82071e;
+  --color-prettylights-syntax-markup-heading: #0550ae;
+  --color-prettylights-syntax-markup-ignored-bg: #0550ae;
+  --color-prettylights-syntax-markup-ignored-text: #d1d9e0;
+  --color-prettylights-syntax-markup-inserted-bg: #dafbe1;
+  --color-prettylights-syntax-markup-inserted-text: #116329;
+  --color-prettylights-syntax-markup-italic: #1f2328;
+  --color-prettylights-syntax-markup-list: #3b2300;
+  --color-prettylights-syntax-meta-diff-range: #8250df;
+  --color-prettylights-syntax-storage-modifier-import: #1f2328;
+  --color-prettylights-syntax-string-regexp: #116329;
+  --color-prettylights-syntax-string: #0a3069;
+  --color-prettylights-syntax-sublimelinter-gutter-mark: #818b98;
+  --color-prettylights-syntax-variable: #953800;
+
+  background: transparent;
+  color: #4a3b28;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.85;
+}
+
+/* ---- 标题：全部居中 ---- */
+body .tpl-vintage-paper .markdown-body h1,
+body .tpl-vintage-paper .markdown-body h2,
+body .tpl-vintage-paper .markdown-body h3,
+body .tpl-vintage-paper .markdown-body h4,
+body .tpl-vintage-paper .markdown-body h5,
+body .tpl-vintage-paper .markdown-body h6 {
+  text-align: center;
+  border-bottom: none;
+  padding-bottom: 0;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+body .tpl-vintage-paper .markdown-body h1 {
+  font-size: 1.6em;
+  margin-top: 1.1em;
+  margin-bottom: 0.9em;
+}
+
+body .tpl-vintage-paper .markdown-body h2 {
+  font-size: 1.28em;
+  margin-top: 1.7em;
+  margin-bottom: 0.7em;
+}
+
+body .tpl-vintage-paper .markdown-body h3 {
+  font-size: 1.08em;
+}
+
+/* ---- 链接 ---- */
+body .tpl-vintage-paper .markdown-body a {
+  color: #8c5a2b;
+  text-decoration-color: rgba(140, 90, 43, 0.5);
+}
+
+/* ---- 行内代码 ---- */
+body .tpl-vintage-paper .markdown-body :not(pre) > code {
+  background-color: #e9ddc4;
+  color: #6b4a2f;
+  font-size: 0.8em;
+}
+
+/* ---- 引用 ---- */
+body .tpl-vintage-paper .markdown-body blockquote {
+  color: #6d5b40;
+  font-style: italic;
+  border-left: 3px solid #c9b58c;
+  padding: 2px 18px;
+}
+
+/* ---- 分隔线：细线居中叠「❖」 ---- */
+body .tpl-vintage-paper .markdown-body hr {
+  position: relative;
+  border: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #d9c9a8 28%,
+    #d9c9a8 72%,
+    transparent
+  );
+  margin: 30px 0;
+}
+
+body .tpl-vintage-paper .markdown-body hr::after {
+  content: "❖";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: block;
+  background: #f6efdf;
+  padding: 0 12px;
+  color: #a3814f;
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* ---- 代码块高亮：hljs token 逐值取用上方浅色盘变量（不随 app 明暗主题
+   翻转——全局 :root[data-theme="dark"] .hljs-* 规则会把暗色 token
+   套在浅底上导致近乎隐形），特异性 (0,3,1) 压过全局 (0,3,0) ---- */
+body .tpl-vintage-paper .markdown-body .hljs {
+  color: var(--color-prettylights-syntax-markup-bold);
+}
+
+body .tpl-vintage-paper .markdown-body .hljs-comment,
+body .tpl-vintage-paper .markdown-body .hljs-quote {
+  color: var(--color-prettylights-syntax-comment);
+}
+
+body .tpl-vintage-paper .markdown-body .hljs-keyword,
+body .tpl-vintage-paper .markdown-body .hljs-doctag,
+body .tpl-vintage-paper .markdown-body .hljs-template-keyword,
+body .tpl-vintage-paper .markdown-body .hljs-type {
+  color: var(--color-prettylights-syntax-keyword);
+}
+
+body .tpl-vintage-paper .markdown-body .hljs-string,
+body .tpl-vintage-paper .markdown-body .hljs-regexp,
+body .tpl-vintage-paper .markdown-body .hljs-addition {
+  color: var(--color-prettylights-syntax-string);
+}
+
+body .tpl-vintage-paper .markdown-body .hljs-number,
+body .tpl-vintage-paper .markdown-body .hljs-literal,
+body .tpl-vintage-paper .markdown-body .hljs-variable,
+body .tpl-vintage-paper .markdown-body .hljs-template-variable {
+  color: var(--color-prettylights-syntax-constant);
+}
+
+body .tpl-vintage-paper .markdown-body .hljs-title,
+body .tpl-vintage-paper .markdown-body .hljs-title.function_,
+body .tpl-vintage-paper .markdown-body .hljs-section {
+  color: var(--color-prettylights-syntax-meta-diff-range);
+}
+
+body .tpl-vintage-paper .markdown-body .hljs-title.class_,
+body .tpl-vintage-paper .markdown-body .hljs-attr,
+body .tpl-vintage-paper .markdown-body .hljs-attribute,
+body .tpl-vintage-paper .markdown-body .hljs-name {
+  color: var(--color-prettylights-syntax-variable);
+}
+
+body .tpl-vintage-paper .markdown-body .hljs-built_in,
+body .tpl-vintage-paper .markdown-body .hljs-symbol {
+  color: var(--color-prettylights-syntax-entity);
+}
+
+body .tpl-vintage-paper .markdown-body .hljs-deletion {
+  color: var(--color-prettylights-syntax-markup-deleted-text);
+}
+
+body .tpl-vintage-paper .markdown-body .hljs-meta,
+body .tpl-vintage-paper .markdown-body .hljs-selector-tag {
+  color: var(--color-prettylights-syntax-string-regexp);
+}
+
+/* ---- 列表：恢复 UA 默认符号（Tailwind preflight 全局 list-style:none
+   抵消了浏览器默认圆点/数字；list-style 可继承，
+   .task-list-item 自身的 none 规则不受影响） ---- */
+body .tpl-vintage-paper .markdown-body ul {
+  list-style: disc;
+}
+
+body .tpl-vintage-paper .markdown-body ol {
+  list-style: decimal;
+}

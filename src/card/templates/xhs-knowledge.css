@@ -1,0 +1,263 @@
+/* 小红书知识卡模板：3:4 暖白底 + 红色点缀 + 居中大标题。
+   优先级契约：body .tpl-xhs-knowledge .markdown-body（0,2,2）必赢
+   md-theme-vars.css 的 html[data-theme] .markdown-body（0,2,1），卡片不随 app 明暗主题变化。 */
+
+/* ---- 卡片本体与装饰层变量 ---- */
+body .tpl-xhs-knowledge {
+  --bgColor-default: #fff9f0;
+  --bgColor-muted: #fdf3e7;
+  --bgColor-neutral-muted: #f6ecdd;
+  --fgColor-default: #33302b;
+  --fgColor-muted: #8c8577;
+  --fgColor-accent: #ff2442;
+  --borderColor-default: #f0e4d3;
+  --borderColor-muted: #f0e4d3;
+
+  background: #fff9f0;
+  border-radius: 12px;
+  padding: 26px 26px 20px;
+  color: #33302b;
+  font-family: "PingFang SC", "HarmonyOS Sans SC", "MiSans", "Segoe UI",
+    "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+}
+
+/* 框架：纵向填充，内容区撑满剩余高度，页脚贴底 */
+body .tpl-xhs-knowledge .tpl-xhs-frame {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 100%;
+}
+
+body .tpl-xhs-knowledge .tpl-xhs-frame > .markdown-body {
+  flex: 1 1 auto;
+}
+
+/* 顶部小胶囊 */
+body .tpl-xhs-knowledge .tpl-xhs-badge {
+  align-self: center;
+  flex: none;
+  background: #ff2442;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.18em;
+  text-indent: 0.18em;
+  padding: 6px 14px;
+  border-radius: 999px;
+  margin-bottom: 18px;
+}
+
+/* 页脚：左右品牌、中间页码 */
+body .tpl-xhs-knowledge .tpl-xhs-footer {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #f0e4d3;
+}
+
+body .tpl-xhs-knowledge .tpl-xhs-brand {
+  font-size: 10px;
+  color: #c4b79f;
+  letter-spacing: 0.04em;
+}
+
+body .tpl-xhs-knowledge .tpl-xhs-page {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8c8577;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- 内容主题变量（明色定版，含代码高亮） ---- */
+body .tpl-xhs-knowledge .markdown-body {
+  color-scheme: light;
+  --bgColor-default: #fff9f0;
+  --bgColor-muted: #fdf3e7;
+  --bgColor-neutral-muted: #f6ecdd;
+  --fgColor-default: #33302b;
+  --fgColor-muted: #8c8577;
+  --fgColor-accent: #ff2442;
+  --borderColor-default: #f0e4d3;
+  --borderColor-muted: #f0e4d3;
+  /* 代码高亮变量：逐值对齐 md-theme-vars.css html[data-theme="light"] 浅色盘 */
+  --color-prettylights-syntax-brackethighlighter-angle: #59636e;
+  --color-prettylights-syntax-brackethighlighter-unmatched: #82071e;
+  --color-prettylights-syntax-carriage-return-bg: #cf222e;
+  --color-prettylights-syntax-carriage-return-text: #f6f8fa;
+  --color-prettylights-syntax-comment: #59636e;
+  --color-prettylights-syntax-constant-other-reference-link: #0a3069;
+  --color-prettylights-syntax-constant: #0550ae;
+  --color-prettylights-syntax-entity-tag: #0550ae;
+  --color-prettylights-syntax-entity: #6639ba;
+  --color-prettylights-syntax-invalid-illegal-bg: #ffebe9;
+  --color-prettylights-syntax-invalid-illegal-text: #d1242f;
+  --color-prettylights-syntax-keyword: #cf222e;
+  --color-prettylights-syntax-markup-bold: #1f2328;
+  --color-prettylights-syntax-markup-changed-bg: #ffd8b5;
+  --color-prettylights-syntax-markup-changed-text: #953800;
+  --color-prettylights-syntax-markup-deleted-bg: #ffebe9;
+  --color-prettylights-syntax-markup-deleted-text: #82071e;
+  --color-prettylights-syntax-markup-heading: #0550ae;
+  --color-prettylights-syntax-markup-ignored-bg: #0550ae;
+  --color-prettylights-syntax-markup-ignored-text: #d1d9e0;
+  --color-prettylights-syntax-markup-inserted-bg: #dafbe1;
+  --color-prettylights-syntax-markup-inserted-text: #116329;
+  --color-prettylights-syntax-markup-italic: #1f2328;
+  --color-prettylights-syntax-markup-list: #3b2300;
+  --color-prettylights-syntax-meta-diff-range: #8250df;
+  --color-prettylights-syntax-storage-modifier-import: #1f2328;
+  --color-prettylights-syntax-string-regexp: #116329;
+  --color-prettylights-syntax-string: #0a3069;
+  --color-prettylights-syntax-sublimelinter-gutter-mark: #818b98;
+  --color-prettylights-syntax-variable: #953800;
+
+  background: transparent;
+  color: #33302b;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+/* ---- 标题：h1 特大加粗居中 ---- */
+body .tpl-xhs-knowledge .markdown-body h1 {
+  text-align: center;
+  font-size: 1.9em;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-top: 0.5em;
+  margin-bottom: 0.7em;
+}
+
+body .tpl-xhs-knowledge .markdown-body h2 {
+  font-size: 1.22em;
+  font-weight: 700;
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-top: 1.5em;
+  margin-bottom: 0.55em;
+}
+
+body .tpl-xhs-knowledge .markdown-body h2::before {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 0.95em;
+  border-radius: 2px;
+  background: #ff2442;
+  margin-right: 8px;
+  vertical-align: -0.08em;
+}
+
+body .tpl-xhs-knowledge .markdown-body h3 {
+  font-size: 1.05em;
+  font-weight: 700;
+}
+
+/* ---- 链接 ---- */
+body .tpl-xhs-knowledge .markdown-body a {
+  color: #ff2442;
+}
+
+/* ---- 行内代码 ---- */
+body .tpl-xhs-knowledge .markdown-body :not(pre) > code {
+  background-color: #f6ecdd;
+  color: #c7373f;
+  font-size: 0.82em;
+}
+
+/* ---- 引用 ---- */
+body .tpl-xhs-knowledge .markdown-body blockquote {
+  color: #8c8577;
+  border-left: 3px solid #ffb3be;
+  padding: 2px 14px;
+}
+
+/* ---- 分隔线 ---- */
+body .tpl-xhs-knowledge .markdown-body hr {
+  height: 1px;
+  background-color: #f0e4d3;
+  margin: 22px 0;
+}
+
+/* ---- 强调 ---- */
+body .tpl-xhs-knowledge .markdown-body strong {
+  color: #c7373f;
+  font-weight: 700;
+}
+
+/* ---- 代码块高亮：hljs token 逐值取用上方浅色盘变量（不随 app 明暗主题
+   翻转——全局 :root[data-theme="dark"] .hljs-* 规则会把暗色 token
+   套在浅底上导致近乎隐形），特异性 (0,3,1) 压过全局 (0,3,0) ---- */
+body .tpl-xhs-knowledge .markdown-body .hljs {
+  color: var(--color-prettylights-syntax-markup-bold);
+}
+
+body .tpl-xhs-knowledge .markdown-body .hljs-comment,
+body .tpl-xhs-knowledge .markdown-body .hljs-quote {
+  color: var(--color-prettylights-syntax-comment);
+}
+
+body .tpl-xhs-knowledge .markdown-body .hljs-keyword,
+body .tpl-xhs-knowledge .markdown-body .hljs-doctag,
+body .tpl-xhs-knowledge .markdown-body .hljs-template-keyword,
+body .tpl-xhs-knowledge .markdown-body .hljs-type {
+  color: var(--color-prettylights-syntax-keyword);
+}
+
+body .tpl-xhs-knowledge .markdown-body .hljs-string,
+body .tpl-xhs-knowledge .markdown-body .hljs-regexp,
+body .tpl-xhs-knowledge .markdown-body .hljs-addition {
+  color: var(--color-prettylights-syntax-string);
+}
+
+body .tpl-xhs-knowledge .markdown-body .hljs-number,
+body .tpl-xhs-knowledge .markdown-body .hljs-literal,
+body .tpl-xhs-knowledge .markdown-body .hljs-variable,
+body .tpl-xhs-knowledge .markdown-body .hljs-template-variable {
+  color: var(--color-prettylights-syntax-constant);
+}
+
+body .tpl-xhs-knowledge .markdown-body .hljs-title,
+body .tpl-xhs-knowledge .markdown-body .hljs-title.function_,
+body .tpl-xhs-knowledge .markdown-body .hljs-section {
+  color: var(--color-prettylights-syntax-meta-diff-range);
+}
+
+body .tpl-xhs-knowledge .markdown-body .hljs-title.class_,
+body .tpl-xhs-knowledge .markdown-body .hljs-attr,
+body .tpl-xhs-knowledge .markdown-body .hljs-attribute,
+body .tpl-xhs-knowledge .markdown-body .hljs-name {
+  color: var(--color-prettylights-syntax-variable);
+}
+
+body .tpl-xhs-knowledge .markdown-body .hljs-built_in,
+body .tpl-xhs-knowledge .markdown-body .hljs-symbol {
+  color: var(--color-prettylights-syntax-entity);
+}
+
+body .tpl-xhs-knowledge .markdown-body .hljs-deletion {
+  color: var(--color-prettylights-syntax-markup-deleted-text);
+}
+
+body .tpl-xhs-knowledge .markdown-body .hljs-meta,
+body .tpl-xhs-knowledge .markdown-body .hljs-selector-tag {
+  color: var(--color-prettylights-syntax-string-regexp);
+}
+
+/* ---- 列表：恢复 UA 默认符号（Tailwind preflight 全局 list-style:none
+   抵消了浏览器默认圆点/数字；list-style 可继承，
+   .task-list-item 自身的 none 规则不受影响） ---- */
+body .tpl-xhs-knowledge .markdown-body ul {
+  list-style: disc;
+}
+
+body .tpl-xhs-knowledge .markdown-body ol {
+  list-style: decimal;
+}

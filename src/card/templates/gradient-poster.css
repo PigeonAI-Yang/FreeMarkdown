@@ -1,0 +1,185 @@
+/* 靛紫海报模板：160deg 深靛渐变底 + 白字 + 亮青紫点缀。
+   优先级契约：body .tpl-gradient-poster .markdown-body（0,2,2）必赢
+   md-theme-vars.css 的 html[data-theme] .markdown-body（0,2,1），卡片不随 app 明暗主题变化。 */
+
+/* ---- 卡片本体与装饰层变量 ---- */
+body .tpl-gradient-poster {
+  --bgColor-default: #1a1b3a;
+  --bgColor-muted: #232048;
+  --bgColor-neutral-muted: rgba(255, 255, 255, 0.08);
+  --fgColor-default: #f3f2ff;
+  --fgColor-muted: rgba(255, 255, 255, 0.6);
+  --fgColor-accent: #8be0fd;
+  --borderColor-default: rgba(255, 255, 255, 0.16);
+  --borderColor-muted: rgba(255, 255, 255, 0.12);
+
+  background: linear-gradient(160deg, #1a1b3a, #2d1b4e);
+  border-radius: 14px;
+  padding: 40px 48px 34px;
+  color: #f3f2ff;
+  font-family: "Segoe UI Variable Display", "Segoe UI", "PingFang SC",
+    "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+}
+
+/* 框架：内容撑满、页脚贴底 */
+body .tpl-gradient-poster .tpl-gp-frame {
+  display: flex;
+  flex-direction: column;
+}
+
+body .tpl-gradient-poster .tpl-gp-frame > .markdown-body {
+  flex: 1 1 auto;
+}
+
+/* 顶部眉标：文档名小字、青色宽字距 */
+body .tpl-gradient-poster .tpl-gp-kicker {
+  flex: none;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #8be0fd;
+  margin-bottom: 22px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 页脚：细线 + 品牌字 */
+body .tpl-gradient-poster .tpl-gp-footer {
+  flex: none;
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+body .tpl-gradient-poster .tpl-gp-brand {
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ---- 内容主题变量（暗色定版，含代码高亮） ---- */
+body .tpl-gradient-poster .markdown-body {
+  color-scheme: dark;
+  --bgColor-default: transparent;
+  --bgColor-muted: rgba(255, 255, 255, 0.06);
+  --bgColor-neutral-muted: rgba(255, 255, 255, 0.08);
+  --fgColor-default: #f3f2ff;
+  --fgColor-muted: rgba(255, 255, 255, 0.6);
+  --fgColor-accent: #c4b5fd;
+  --borderColor-default: rgba(255, 255, 255, 0.16);
+  --borderColor-muted: rgba(255, 255, 255, 0.12);
+  --color-prettylights-syntax-brackethighlighter-angle: #b8b6d9;
+  --color-prettylights-syntax-brackethighlighter-unmatched: #ff8f8f;
+  --color-prettylights-syntax-carriage-return-bg: #b62324;
+  --color-prettylights-syntax-carriage-return-text: #f3f2ff;
+  --color-prettylights-syntax-comment: #9d9bbf;
+  --color-prettylights-syntax-constant-other-reference-link: #a5d6ff;
+  --color-prettylights-syntax-constant: #8be0fd;
+  --color-prettylights-syntax-entity-tag: #7ee787;
+  --color-prettylights-syntax-entity: #d2a8ff;
+  --color-prettylights-syntax-invalid-illegal-bg: #8e1519;
+  --color-prettylights-syntax-invalid-illegal-text: #ff8f8f;
+  --color-prettylights-syntax-keyword: #c4b5fd;
+  --color-prettylights-syntax-markup-bold: #ffffff;
+  --color-prettylights-syntax-markup-changed-bg: #5a1e02;
+  --color-prettylights-syntax-markup-changed-text: #ffdfb6;
+  --color-prettylights-syntax-markup-deleted-bg: #67060c;
+  --color-prettylights-syntax-markup-deleted-text: #ffdcd7;
+  --color-prettylights-syntax-markup-heading: #8be0fd;
+  --color-prettylights-syntax-markup-inserted-bg: #033a16;
+  --color-prettylights-syntax-markup-inserted-text: #aff5b4;
+  --color-prettylights-syntax-list: #f2cc60;
+  --color-prettylights-syntax-string-regexp: #7ee787;
+  --color-prettylights-syntax-string: #a5d6ff;
+  --color-prettylights-syntax-sublimelinter-gutter-mark: #4a4870;
+  --color-prettylights-syntax-variable: #ffa657;
+
+  background: transparent;
+  color: #f3f2ff;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+/* ---- 标题：h1 青紫渐变字 ---- */
+body .tpl-gradient-poster .markdown-body h1,
+body .tpl-gradient-poster .markdown-body h2,
+body .tpl-gradient-poster .markdown-body h3 {
+  border-bottom: none;
+  padding-bottom: 0;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+body .tpl-gradient-poster .markdown-body h1 {
+  font-size: 1.7em;
+  margin-top: 1.1em;
+  margin-bottom: 0.8em;
+  background-image: linear-gradient(90deg, #8be0fd, #c4b5fd);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+body .tpl-gradient-poster .markdown-body h2 {
+  font-size: 1.3em;
+  margin-top: 1.7em;
+  margin-bottom: 0.6em;
+}
+
+body .tpl-gradient-poster .markdown-body h3 {
+  font-size: 1.1em;
+}
+
+/* ---- 链接 ---- */
+body .tpl-gradient-poster .markdown-body a {
+  color: #8be0fd;
+}
+
+/* ---- 行内代码：半透明白底 ---- */
+body .tpl-gradient-poster .markdown-body :not(pre) > code {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #e4ddff;
+  font-size: 0.82em;
+}
+
+/* ---- 引用：半透明白左边框 ---- */
+body .tpl-gradient-poster .markdown-body blockquote {
+  color: rgba(255, 255, 255, 0.72);
+  border-left: 3px solid rgba(255, 255, 255, 0.35);
+  padding: 2px 18px;
+}
+
+/* ---- 分隔线：两端淡出的细线 ---- */
+body .tpl-gradient-poster .markdown-body hr {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.35),
+    transparent
+  );
+  margin: 28px 0;
+}
+
+/* ---- 强调 ---- */
+body .tpl-gradient-poster .markdown-body strong {
+  color: #ffffff;
+}
+
+/* ---- 列表：恢复 UA 默认符号（Tailwind preflight 全局 list-style:none
+   抵消了浏览器默认圆点/数字；list-style 可继承，
+   .task-list-item 自身的 none 规则不受影响） ---- */
+body .tpl-gradient-poster .markdown-body ul {
+  list-style: disc;
+}
+
+body .tpl-gradient-poster .markdown-body ol {
+  list-style: decimal;
+}

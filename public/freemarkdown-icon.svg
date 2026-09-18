@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-label="Freemarkdown icon">
+  <title>Freemarkdown</title>
+  <desc>Transparent split-page mark with a blue-and-mint flowing divider, outlined Markdown hash and chevron. All artwork is vector geometry.</desc>
+  <defs>
+    <linearGradient id="fmd-left" gradientUnits="userSpaceOnUse" x1="124.15" y1="116.11" x2="80.69" y2="425.06">
+      <stop offset="0" stop-color="#0874FF"/>
+      <stop offset="0.32" stop-color="#075BDC"/>
+      <stop offset="0.68" stop-color="#0B3477"/>
+      <stop offset="1" stop-color="#111B2D"/>
+    </linearGradient>
+    <linearGradient id="fmd-right" gradientUnits="userSpaceOnUse" x1="432.50" y1="246.48" x2="312.25" y2="444.70">
+      <stop offset="0" stop-color="#0669FF"/>
+      <stop offset="0.48" stop-color="#075BEC"/>
+      <stop offset="0.82" stop-color="#0A3F94"/>
+      <stop offset="1" stop-color="#142138"/>
+    </linearGradient>
+    <linearGradient id="fmd-spine" gradientUnits="userSpaceOnUse" x1="272.97" y1="55.99" x2="272.97" y2="451.84">
+      <stop offset="0" stop-color="#11C88A"/>
+      <stop offset="0.26" stop-color="#099CAE"/>
+      <stop offset="0.58" stop-color="#0066FC"/>
+      <stop offset="0.79" stop-color="#007BFB"/>
+      <stop offset="1" stop-color="#0BC0C1"/>
+    </linearGradient>
+    <linearGradient id="fmd-chevron" gradientUnits="userSpaceOnUse" x1="341.42" y1="202.43" x2="380.71" y2="264.93">
+      <stop offset="0" stop-color="#00AA99"/>
+      <stop offset="1" stop-color="#0594AA"/>
+    </linearGradient>
+  </defs>
+  <path d="M 248.56 101.23 C 238.44 113.13 219.99 111.94 186.65 110.75 L 132.48 109.56 C 74.14 108.37 42 134.56 42 175.04 L 42 379.82 C 42 419.1 61.05 438.15 97.36 436.37 C 124.74 435.77 171.77 423.27 236.65 410.77 L 236.65 383.98 C 236.65 378.63 233.68 376.24 228.32 377.44 L 130.1 398.87 C 92.6 407.2 75.34 395.29 75.34 367.91 L 75.34 197.66 C 75.34 173.26 86.65 160.76 110.46 154.8 L 204.51 133.97 C 230.11 128.61 241.42 124.45 248.56 101.23 Z" fill="url(#fmd-left)"/>
+  <path d="M 296.18 130.99 C 326.54 128.02 368.8 116.11 406.9 114.33 C 449.76 112.54 470 126.83 470 167.9 L 470 379.22 C 470 424.46 446.19 445.3 403.33 445.89 L 334.28 445.3 C 311.06 445.3 291.42 448.87 275.35 456.01 L 293.8 419.1 C 297.97 410.77 305.11 406.01 317.61 407.2 L 399.76 410.18 C 426.55 411.37 439.05 398.27 439.05 372.08 L 439.05 198.26 C 439.05 173.26 428.33 160.76 403.33 157.18 L 315.23 146.47 C 304.51 145.28 298.56 139.92 296.18 130.99 Z" fill="url(#fmd-right)"/>
+  <path d="M 286.06 55.99 C 268.8 56.58 252.73 75.63 252.73 94.09 L 253.92 445.3 C 253.92 451.25 258.68 453.03 262.25 445.89 L 287.85 388.75 C 292.01 379.22 293.8 372.08 293.8 363.74 L 293.2 61.35 C 293.2 57.18 291.42 55.39 286.06 55.99 Z" fill="url(#fmd-spine)"/>
+  <path d="M 125.93 198.85 L 139.03 195.88 L 137.24 210.76 L 150.93 207.78 L 153.32 192.9 L 167.01 189.92 L 165.22 204.81 L 176.53 202.43 L 175.34 216.12 L 163.44 218.5 L 161.65 232.19 L 172.36 229.81 L 171.17 244.09 L 159.86 246.48 L 157.48 262.55 L 143.79 265.52 L 146.17 249.45 L 131.89 252.43 L 129.5 268.5 L 115.81 271.48 L 118.19 255.4 L 106.88 257.79 L 108.08 244.09 L 119.98 241.71 L 121.77 228.02 L 110.46 230.4 L 111.65 216.71 L 123.55 213.74 Z M 135.46 225.05 L 133.67 238.74 L 147.96 235.76 L 149.74 222.07 Z" fill="#0867F2" fill-rule="evenodd"/>
+  <path d="M 343.80 204.21 L 378.33 234.57 L 343.80 264.93" stroke="url(#fmd-chevron)" stroke-width="21.43" stroke-linecap="round" stroke-linejoin="round"/>
+  <g stroke="#CBD5E1" stroke-width="22.62" stroke-linecap="round">
+    <path d="M 118.19 308.98 L 212.25 285.17"/>
+    <path d="M 118.19 353.03 L 212.25 330.41"/>
+    <path d="M 344.40 310.76 L 393.81 314.93"/>
+    <path d="M 344.40 356.60 L 393.81 360.17"/>
+  </g>
+</svg>

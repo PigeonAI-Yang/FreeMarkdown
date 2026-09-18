@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none" role="img" aria-label="Freemarkdown icon">
+  <title>Freemarkdown</title>
+  <desc>Transparent small-size split-page icon. Simplified details, wider gaps and flat colors for small UI uses.</desc>
+  <path d="M15 6 C13.8 7 12.2 6.7 10.2 6.6 L7.3 6.5 C4.1 6.4 2 8.4 2 11.2 V23.2 C2 26.3 3.8 28 6.8 27.6 L14 26.1 V23.5 L7 25 C5.4 25.3 4.5 24.5 4.5 23 V11.4 C4.5 9.9 5.4 9.2 7 8.9 L12.6 7.8 C13.9 7.5 14.7 7 15 6 Z" fill="#0969F4"/>
+  <path d="M18.5 8 C20.9 7.6 23 6.9 25.4 7 C28.4 7 30 8.4 30 11.3 V23.5 C30 26.6 28.2 28.2 25.3 28.2 H21.5 C20 28.2 18.9 28.5 18 29 L19.4 26.1 C19.8 25.5 20.3 25.4 21.4 25.5 L25.1 25.7 C26.8 25.8 27.5 24.9 27.5 23.4 V11.6 C27.5 10.2 26.8 9.5 25.2 9.4 L20 8.8 C19.3 8.7 18.8 8.4 18.5 8 Z" fill="#0969F4"/>
+  <path d="M17.7 3 C16.5 3.1 15.6 4.3 15.6 5.6 V28.7 Q15.6 29.5 16.1 28.6 L17.8 24.8 Q18.2 24 18.2 23.2 V3.5 Q18.2 2.9 17.7 3 Z" fill="#08B7AB"/>
+  <path d="M8.9 12.1 L7.8 18.7 M12 11.5 L10.9 18.1 M6.8 14.5 L13.4 13.2 M6.3 17.3 L12.9 16" stroke="#0969F4" stroke-width="1.4" stroke-linecap="square"/>
+  <path d="M21 12.5 L24 15 L21 17.5" stroke="#079FA4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

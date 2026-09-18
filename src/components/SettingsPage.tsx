@@ -234,6 +234,13 @@ function AboutPane() {
     <div>
       <PaneTitle title="关于" desc="FreeMarkdown —— 本地 Markdown 阅读器。" />
       <Card>
+        <div className="flex items-center gap-3 py-2">
+          <img src="/freemarkdown-icon.svg" width={48} height={48} alt="FreeMarkdown 图标" />
+          <div>
+            <div className="text-[14px] font-medium text-text-1">FreeMarkdown</div>
+            <div className="text-[12px] text-text-3">本地 Markdown 阅读器</div>
+          </div>
+        </div>
         <dl className="space-y-1.5 py-1 text-[13px]">
           <div className="flex gap-3">
             <dt className="w-16 flex-none text-text-3">版本</dt>

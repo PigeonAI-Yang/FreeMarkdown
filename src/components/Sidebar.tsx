@@ -232,6 +232,9 @@ function TreeRow({ entry, depth, expanded, cache, toggle, load }: TreeRowProps) 
         style={{ paddingLeft: 6 + depth * 14 }}
         onClick={() => (entry.isDir ? void toggle(entry.path) : openFile(entry.path))}
         title={entry.path}
+        data-ctx="tree"
+        data-path={entry.path}
+        data-is-dir={entry.isDir ? "true" : "false"}
       >
         {entry.isDir ? (
           <svg
@@ -287,6 +290,9 @@ function Recents() {
           className="cursor-default truncate rounded-md px-2 py-[3px] text-[12px] text-text-2 hover:bg-bg-hover hover:text-text-1"
           title={p}
           onClick={() => openFile(p)}
+          data-ctx="recent"
+          data-path={p}
+          data-is-dir="false"
         >
           {basename(p)}
           <span className="ml-1 text-text-3 opacity-70">{shortDir(dirname(p))}</span>

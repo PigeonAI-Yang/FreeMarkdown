@@ -69,19 +69,20 @@ async function enhanceMath(root: HTMLElement) {
 let mermaidSeq = 0;
 let mermaidInitedTheme: string | null = null;
 
-/** mermaid 图表：替换 code.language-mermaid 的 pre 为渲染容器 */
-async function enhanceMermaid(root: HTMLElement) {
+/** mermaid 图表：替换 code.language-mermaid 的 pre 为渲染容器；可强制明暗主题（卡片导出用） */
+async function enhanceMermaid(root: HTMLElement, forcedTheme?: "light" | "dark") {
   const blocks = root.querySelectorAll<HTMLElement>(
     "pre code.language-mermaid:not([data-mermaid-done])",
   );
   if (blocks.length === 0) return;
   const mermaid = await loadMermaid();
-  if (mermaidInitedTheme !== theme()) {
-    mermaidInitedTheme = theme();
+  const eff = forcedTheme ?? theme();
+  if (mermaidInitedTheme !== eff) {
+    mermaidInitedTheme = eff;
     mermaid.initialize({
       startOnLoad: false,
       securityLevel: "strict",
-      theme: theme() === "dark" ? "dark" : "default",
+      theme: eff === "dark" ? "dark" : "default",
       fontFamily: getComputedStyle(document.body).fontFamily,
     });
   }
@@ -108,9 +109,13 @@ async function enhanceMermaid(root: HTMLElement) {
 
 /**
  * 注入 HTML 后的增强（幂等）：高亮、公式、图表。
+ * opts.mermaidTheme 可强制 mermaid 明暗（卡片导出按模板主题传入）。
  * 返回文档是否包含 mermaid（用于提示预加载）。
  */
-export async function enhanceChunk(root: HTMLElement) {
+export async function enhanceChunk(
+  root: HTMLElement,
+  opts?: { mermaidTheme?: "light" | "dark" },
+) {
   root.querySelectorAll("img:not([data-lz])").forEach((img) => {
     img.setAttribute("loading", "lazy");
     img.setAttribute("data-lz", "1");
@@ -118,7 +123,7 @@ export async function enhanceChunk(root: HTMLElement) {
   await Promise.all([
     enhanceCode(root),
     enhanceMath(root),
-    enhanceMermaid(root),
+    enhanceMermaid(root, opts?.mermaidTheme),
   ]);
 }
 

@@ -48,9 +48,17 @@ export const api = {
   saveSession: (data: string) => invoke<void>("session_save", { data }),
   loadSession: () => invoke<string | null>("session_load"),
   openExternal: (url: string) => invoke<void>("open_external", { url }),
+  reveal: (path: string) => invoke<void>("fs_reveal", { path }),
   startupMs: () => invoke<number>("startup_ms"),
   perfLog: (label: string, ms: number) =>
     invoke<void>("perf_log", { label, ms }).catch(() => {}),
+  /* ---------- 卡片导出 ---------- */
+  cardPickSavePath: (defaultName: string, format: string) =>
+    invoke<string | null>("card_pick_save_path", { defaultName, format }),
+  cardWriteFile: (path: string, dataB64: string) =>
+    invoke<number>("card_write_file", { path, dataB64 }),
+  cardClipboardWritePng: (dataB64: string) =>
+    invoke<[number, number]>("card_clipboard_write_png", { dataB64 }),
 };
 
 export function basename(p: string): string {

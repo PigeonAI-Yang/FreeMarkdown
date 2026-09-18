@@ -12,6 +12,17 @@ src-tauri/*.key
 # 本地验证截图与性能探针输出
 .verify/
 
+# 性能/验收用的生成数据（testdata/gen.mjs 可重新生成）
+testdata/big/
+testdata/many/
+testdata/out/
+
+# Tauri 构建时生成的 schema
+src-tauri/gen/schemas/
+
+# 本地代理会话状态
+.zcode/
+
 # 编辑器与系统文件
 .vscode/
 .idea/
