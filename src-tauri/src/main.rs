@@ -5,6 +5,7 @@ mod filedrop;
 mod markdown;
 mod search;
 mod session;
+mod watch;
 
 use std::time::Instant;
 use tauri::Manager;
@@ -95,6 +96,23 @@ fn fs_pick_markdown_file(app: tauri::AppHandle) -> Result<Option<String>, String
         .map(|p| p.to_string()))
 }
 
+/// 编辑「另存为」：选择目标 Markdown 路径（不写文件，写入由 write_markdown 负责）
+#[tauri::command]
+fn fs_pick_markdown_save_path(
+    app: tauri::AppHandle,
+    default_name: String,
+) -> Result<Option<String>, String> {
+    use tauri_plugin_dialog::DialogExt;
+    Ok(app
+        .dialog()
+        .file()
+        .set_title("另存为 Markdown")
+        .add_filter("Markdown", &["md", "markdown"])
+        .set_file_name(&default_name)
+        .blocking_save_file()
+        .map(|p| p.to_string()))
+}
+
 /// 用系统默认程序打开外部链接/文件（http/https）
 #[tauri::command]
 fn open_external(app: tauri::AppHandle, url: String) -> Result<(), String> {
@@ -165,6 +183,16 @@ fn main() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .manage(markdown::CacheState::new(64))
         .setup(|app| {
+            // 常驻文件监听：阅读/编辑面板打开的文件被外部改动时广播 app:file-changed
+            match watch::install(app.handle()) {
+                Ok(state) => {
+                    app.manage(state);
+                }
+                Err(e) => {
+                    eprintln!("[watch] 监听不可用：{e}");
+                    app.manage(watch::WatchState::new());
+                }
+            }
             // Windows 文件打开桥接（DOM File → 原生路径）
             #[cfg(windows)]
             {
@@ -180,9 +208,16 @@ fn main() {
         })
         .invoke_handler(tauri::generate_handler![
             markdown::read_markdown,
+            markdown::read_markdown_source,
+            markdown::render_markdown_blocks,
+            markdown::write_markdown,
+            watch::watch_file,
+            watch::unwatch_file,
+            watch::watch_count,
             fs_list_dir,
             fs_pick_folder,
             fs_pick_markdown_file,
+            fs_pick_markdown_save_path,
             search::search_folder,
             session::session_save,
             session::session_load,

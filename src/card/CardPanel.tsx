@@ -17,6 +17,7 @@ import { collectNodes, computeCuts, flattenUnits, type CardCut, type PagShape } 
 import { localizeImages } from "./engine/images";
 import { ensureFontReady, importFontFile, listSystemFonts } from "./engine/fonts";
 import { DeviceShell } from "./shells/DeviceShell";
+import { useCanvasPanZoom } from "./useCanvasPanZoom";
 import { exportClipboard, exportSave } from "./engine/export";
 import "./card-panel.css";
 
@@ -344,6 +345,9 @@ export function CardPanel(props: IDockviewPanelProps<{ path: string }>) {
     stageW > 48 && cardW > 0 ? Math.min(1, (stageW - 48) / cardW) : 0.25;
   aspectFixRef.current = aspectFix;
 
+  /* 画布交互：拖动平移 / Ctrl+滚轮缩放 / 双击复位（不影响导出，导出克隆卡片自身） */
+  const canvas = useCanvasPanZoom(stageRef, fit);
+
   /* -- 导出三按钮 -- */
   const doExport = async (target: "save" | "clipboard") => {
     const root = rootRef.current;
@@ -645,7 +649,11 @@ export function CardPanel(props: IDockviewPanelProps<{ path: string }>) {
 
       {/* ============ 右侧预览 + 操作条 ============ */}
       <div className="card-preview">
-        <section className="card-stage" ref={stageRef}>
+        <section
+          className={`card-stage${canvas.panning ? " is-panning" : ""}`}
+          ref={stageRef}
+          {...canvas.stageHandlers}
+        >
           {phase === "loading" && (
             <div className="card-msg">
               <span className="text-[12px] text-text-3">正在生成预览…</span>
@@ -672,7 +680,9 @@ export function CardPanel(props: IDockviewPanelProps<{ path: string }>) {
             </div>
           )}
           {(
-            /* 布局盒 = 缩放后尺寸，视觉由 transform 收缩到同一矩形（见 css）。
+            /* 布局盒 = 「适应窗口」尺寸；缩放与平移都由 transform 承担。
+               盒子宽度若跟着缩放变化，margin:auto 居中会让元素原点一起移动，
+               以光标为中心的缩放就会漂移；视觉溢出由舞台 overflow:hidden 裁掉。
                捕获树常驻挂载：run() 依赖三个 refs，若仅 ready 相位挂载，
                refs 永远为空 → 静默 return → 永远到不了 ready（死锁）。
                loading 期间由 rootStyle visibility 隐藏，不影响布局测量。 */
@@ -681,7 +691,7 @@ export function CardPanel(props: IDockviewPanelProps<{ path: string }>) {
               style={{
                 width: Math.round(cardW * fit),
                 height: Math.round(cardH * fit),
-                transform: `scale(${fit})`,
+                transform: `translate(${canvas.view.x}px, ${canvas.view.y}px) scale(${canvas.scale})`,
                 transformOrigin: "top center",
               }}
             >
@@ -722,6 +732,27 @@ export function CardPanel(props: IDockviewPanelProps<{ path: string }>) {
               </div>
             </div>
           )}
+
+          {/* 画布控制：拖动平移 · Ctrl/⌘+滚轮缩放 · 双击复位 */}
+          <div className="card-zoom" data-canvas-control>
+            <button
+              className="card-zoom-btn"
+              title="缩小"
+              onClick={() => canvas.zoomByStep(-1)}
+            >
+              −
+            </button>
+            <button className="card-zoom-value" title="适应窗口" onClick={canvas.reset}>
+              {Math.round(canvas.scale * 100)}%
+            </button>
+            <button
+              className="card-zoom-btn"
+              title="放大"
+              onClick={() => canvas.zoomByStep(1)}
+            >
+              +
+            </button>
+          </div>
         </section>
 
         <footer className="card-actions">

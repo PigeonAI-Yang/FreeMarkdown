@@ -66,13 +66,72 @@
   min-height: 0;
 }
 
-/* 中性灰棋盘舞台：与任何模板底色都可区分 */
+/* 预览舞台：跟主题走的点阵底（--stage-bg 底 + --stage-dot 圆点）。
+   不用棋盘格：卡片在设备外壳模式下四周是透明的，点阵比格子更安静，
+   也与 Typora/Linear 那种克制的观感一致。 */
 .card-stage {
   position: relative;
   flex: 1;
-  overflow: auto;
+  /* 画布模式：不使用原生滚动条，平移/缩放全部由 transform 驱动 */
+  overflow: hidden;
   padding: 24px;
-  background: repeating-conic-gradient(#e7e8ec 0% 25%, #dcdee3 0% 50%) 50% / 24px 24px;
+  background-color: var(--stage-bg);
+  background-image: radial-gradient(circle, var(--stage-dot) 1.1px, transparent 1.3px);
+  background-size: 18px 18px;
+  background-position: 0 0;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.card-stage.is-panning {
+  cursor: grabbing;
+}
+
+/* ---- 画布控制条 ---- */
+.card-zoom {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elev);
+  box-shadow: var(--shadow);
+  opacity: 0.92;
+}
+
+.card-zoom:hover {
+  opacity: 1;
+}
+
+.card-zoom-btn,
+.card-zoom-value {
+  height: 22px;
+  min-width: 22px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.card-zoom-value {
+  min-width: 46px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-1);
+}
+
+.card-zoom-btn:hover,
+.card-zoom-value:hover {
+  background: var(--bg-hover);
+  color: var(--text-1);
 }
 
 /* 加载 / 空文档 / 失败三态 */

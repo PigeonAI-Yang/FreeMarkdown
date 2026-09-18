@@ -7,10 +7,12 @@ import {
   appStore,
   dockRef,
   openCardPanel,
+  openEditPanel,
   openFile,
   setRootFolder,
   scrollMap,
   useApp,
+  type EditMode,
 } from "./lib/store";
 import { loadSession, saveSessionNow, sessionMarkDirty } from "./lib/session";
 import { DockHost } from "./components/DockHost";
@@ -51,6 +53,7 @@ function AppShell() {
         tocVisible: session.tocVisible,
         rootFolder: session.rootFolder,
         searchRoot: session.searchRoot ?? null,
+        editMode: session.editMode ?? "split",
         booted: true,
       });
       setLayout((session.layout as SerializedDockview) ?? null);
@@ -174,6 +177,11 @@ function AppShell() {
       } else if (k === "f" && e.shiftKey) {
         e.preventDefault();
         appStore.set({ searchOpen: !appStore.get().searchOpen });
+      } else if (k === "e" && e.shiftKey) {
+        e.preventDefault();
+        // 对活动文档打开编辑面板（源码 + 分栏预览）
+        const p = appStore.get().activePanelPath;
+        if (p) openEditPanel(p);
       } else if (k === "e") {
         e.preventDefault();
         // 对活动文档打开卡片导出面板
@@ -229,6 +237,16 @@ function AppShell() {
   );
 }
 
+/**
+ * 切换编辑形态。若当前活动文档还没有编辑面板，顺手开一个：
+ * 让「分栏/源码/预览」在阅读态下也是直接可用的入口。
+ */
+function setEditMode(mode: EditMode) {
+  updateUi({ editMode: mode });
+  const p = appStore.get().activePanelPath;
+  if (p && !dockRef.api?.getPanel(`edit:${p}`)) openEditPanel(p);
+}
+
 function updateUi(patch: Parameters<typeof appStore.set>[0]) {
   appStore.set(patch);
   sessionMarkDirty();
@@ -246,6 +264,10 @@ function ToolBar() {
   const app = useApp();
   const dragRef = useRef<HTMLDivElement>(null);
   void dragRef;
+  // 状态芯片跟随「当前活动面板」：只有它确实是编辑面板时才显示
+  const editStatus = app.activePanelPath
+    ? app.editStatus[app.activePanelPath]
+    : undefined;
 
   return (
     <header className="flex h-11 flex-none items-center gap-1 border-b border-border-app bg-bg px-2.5">
@@ -297,12 +319,43 @@ function ToolBar() {
         className="icon-btn"
         onClick={() => {
           const p = appStore.get().activePanelPath;
+          if (p) openEditPanel(p);
+        }}
+        title="编辑（源码 + 分栏预览） (Ctrl+Shift+E)"
+      >
+        <IconEdit />
+      </button>
+      <button
+        className="icon-btn"
+        onClick={() => {
+          const p = appStore.get().activePanelPath;
           if (p) openCardPanel(p);
         }}
         title="卡片导出 (Ctrl+E)"
       >
         <IconCard />
       </button>
+
+      {/* 编辑形态：仅源码 / 分栏 / 仅预览（全局，作用于编辑面板） */}
+      <div className="tb-seg" role="group" aria-label="编辑形态">
+        {(
+          [
+            ["editor", "源码"],
+            ["split", "分栏"],
+            ["preview", "预览"],
+          ] as const
+        ).map(([m, label]) => (
+          <button
+            key={m}
+            className={`tb-seg-btn ${app.editMode === m ? "active" : ""}`}
+            data-edit-mode={m}
+            onClick={() => setEditMode(m)}
+            title={`编辑面板：${label}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
       <div className="mx-1 h-5 w-px bg-border-app" />
 
@@ -322,6 +375,35 @@ function ToolBar() {
       </button>
 
       <div className="ml-auto flex items-center gap-1">
+        {editStatus && (
+          <span className="mr-1 flex items-center gap-1.5">
+            <span
+              className={`tb-status ${editStatus.dirty ? "is-dirty" : ""}`}
+              data-save-state={
+                editStatus.saving ? "saving" : editStatus.dirty ? "dirty" : "clean"
+              }
+            >
+              {editStatus.saving
+                ? "保存中…"
+                : editStatus.dirty
+                  ? "未保存"
+                  : editStatus.savedAt
+                    ? `已保存 ${new Date(editStatus.savedAt).toLocaleTimeString()}`
+                    : "已同步"}
+            </span>
+            <span className="tb-badge" data-eol>
+              {editStatus.eol === "crlf" ? "CRLF" : "LF"}
+            </span>
+            {editStatus.bom && (
+              <span className="tb-badge" data-bom>
+                BOM
+              </span>
+            )}
+            {editStatus.conflict != null && (
+              <span className="tb-badge is-warn">冲突</span>
+            )}
+          </span>
+        )}
         <button
           className={`icon-btn ${app.settingsOpen ? "active" : ""}`}
           onClick={() => updateUi({ settingsOpen: !app.settingsOpen })}
@@ -364,6 +446,14 @@ function IconCard() {
       <rect x="3" y="4" width="18" height="16" rx="2" />
       <circle cx="9" cy="10" r="1.6" />
       <path d="M3 17l5-4.5 4 3.5 3.5-3L21 17" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function IconEdit() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M4 20h4L20 8l-4-4L4 16v4z" strokeLinejoin="round" />
+      <path d="M14 6l4 4" strokeLinejoin="round" />
     </svg>
   );
 }

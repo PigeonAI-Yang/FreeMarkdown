@@ -2,7 +2,14 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { IDockviewPanel } from "dockview";
 import { api, basename } from "../lib/ipc";
-import { appStore, actions, dockRef, openFile, setRootFolder } from "../lib/store";
+import {
+  appStore,
+  actions,
+  dockRef,
+  openEditPanel,
+  openFile,
+  setRootFolder,
+} from "../lib/store";
 import { sessionMarkDirty } from "../lib/session";
 
 /* ---------------- 菜单项模型（扁平一级，不做子菜单） ---------------- */
@@ -192,6 +199,7 @@ function defaultItems(): MenuItem[] {
   if (activePath) {
     items.push(
       { separator: true },
+      { label: "编辑本文档", onClick: () => openEditPanel(activePath) },
       { label: "在资源管理器中显示", onClick: () => void api.reveal(activePath) },
       { label: "复制文件路径", onClick: () => void navigator.clipboard?.writeText(activePath) },
       {
@@ -223,6 +231,7 @@ function treeItems(path: string, isDir: boolean): MenuItem[] {
   }
   return [
     { label: "打开", onClick: () => openFile(path) },
+    { label: "编辑", onClick: () => openEditPanel(path) },
     {
       label: "在新分屏打开",
       onClick: () => {
@@ -244,6 +253,7 @@ function treeItems(path: string, isDir: boolean): MenuItem[] {
 function recentItems(path: string): MenuItem[] {
   return [
     { label: "打开", onClick: () => openFile(path) },
+    { label: "编辑", onClick: () => openEditPanel(path) },
     { label: "在资源管理器中显示", onClick: () => void api.reveal(path) },
     { separator: true },
     {
@@ -280,6 +290,8 @@ function tabItems(path: string): MenuItem[] {
   const groupPanels = panel.group.panels;
   const idx = groupPanels.indexOf(panel);
   return [
+    { label: "编辑", onClick: () => openEditPanel(path) },
+    { separator: true },
     { label: "关闭", onClick: () => closeSome([panel]) },
     { label: "关闭其他", disabled: others.length === 0, onClick: () => closeSome(others) },
     {

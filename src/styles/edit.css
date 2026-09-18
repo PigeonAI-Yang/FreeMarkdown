@@ -1,0 +1,179 @@
+/* ==================== 编辑面板（edit:） ====================
+ *
+ * 面板本身没有工具条：形态切换（源码/分栏/预览）与保存状态、换行/BOM 徽标
+ * 都在顶部工具条上（App.tsx ToolBar）。面板内只保留必要的现场提示——
+ * 冲突横幅与保存失败提示，它们是"必须立刻处理"的动作，不做成常驻控件。
+ */
+
+.edit-pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--bg-elev);
+}
+
+.edit-conflict {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, #e8a33d 16%, var(--bg-elev));
+  font-size: 12px;
+  color: var(--text-1);
+}
+
+.edit-conflict > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.edit-conflict button {
+  flex: none;
+  padding: 2px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  background: var(--bg-elev);
+  color: var(--text-1);
+  font-size: 11.5px;
+  cursor: default;
+}
+
+.edit-conflict button:hover {
+  background: var(--bg-hover);
+}
+
+.edit-save-error {
+  flex: none;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, #d9534f 14%, var(--bg-elev));
+  font-size: 12px;
+  color: var(--text-1);
+}
+
+.edit-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.edit-editor {
+  flex: 1 1 50%;
+  min-width: 0;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+}
+
+.edit-body.mode-editor .edit-editor {
+  flex: 1 1 100%;
+  border-right: none;
+}
+
+.edit-body.mode-preview .edit-editor {
+  display: none;
+}
+
+/* 分栏预览：与阅读面板同一套 .doc-content / .markdown-body 样式 */
+.edit-preview-scroll {
+  flex: 1 1 50%;
+  min-width: 0;
+}
+
+.edit-body.mode-preview .edit-preview-scroll {
+  flex: 1 1 100%;
+}
+
+.edit-preview-spacer {
+  pointer-events: none;
+}
+
+/* 预览块：与阅读面板一致（.doc-content 的排版交给 markdown.css） */
+.edit-preview-scroll .doc-block {
+  position: relative;
+}
+
+.edit-preview-scroll .doc-block[data-start]::before {
+  content: attr(data-start);
+  position: absolute;
+  left: -34px;
+  top: 0.45em;
+  width: 26px;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms;
+}
+
+.edit-preview-scroll:hover .doc-block[data-start]::before {
+  opacity: 0.55;
+}
+
+.edit-empty-hint {
+  padding: 14px 2px;
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+
+/* ==================== 顶部工具条上的编辑控件 ==================== */
+
+.tb-seg {
+  display: inline-flex;
+  margin-left: 2px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.tb-seg-btn {
+  padding: 1px 8px;
+  font-size: 11.5px;
+  color: var(--text-2);
+  background: transparent;
+  cursor: default;
+}
+
+.tb-seg-btn + .tb-seg-btn {
+  border-left: 1px solid var(--border);
+}
+
+.tb-seg-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-1);
+}
+
+.tb-seg-btn.active {
+  background: var(--bg-active);
+  color: var(--text-1);
+}
+
+.tb-status {
+  font-size: 11.5px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tb-status.is-dirty {
+  color: var(--accent);
+}
+
+.tb-badge {
+  padding: 0 5px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  line-height: 16px;
+}
+
+.tb-badge.is-warn {
+  border-color: #e8a33d;
+  color: #b8791f;
+}

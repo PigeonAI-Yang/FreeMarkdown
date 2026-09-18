@@ -1,5 +1,5 @@
 import { api } from "./ipc";
-import { appStore, scrollMap } from "./store";
+import { appStore, dockRef, scrollMap, type EditMode } from "./store";
 import {
   cardStore,
   DEFAULT_CARD_SETTINGS,
@@ -28,6 +28,8 @@ export interface SessionData {
   sidebarVisible: boolean;
   tocVisible: boolean;
   searchRoot: string | null;
+  /** 编辑面板形态：源码 / 分栏 / 预览（全局，顶部工具条切换） */
+  editMode: EditMode;
   window: WindowState | null;
   /** 卡片导出选项（新增字段，缺省合并默认值，不改版本号） */
   card: CardSettings;
@@ -47,6 +49,7 @@ const DEFAULTS: SessionData = {
   sidebarVisible: true,
   tocVisible: true,
   searchRoot: null,
+  editMode: "split",
   window: null,
   card: { ...DEFAULT_CARD_SETTINGS },
 };
@@ -82,6 +85,7 @@ export function sessionPayload(layout: unknown, window: WindowState | null): Ses
     sidebarVisible: s.sidebarVisible,
     tocVisible: s.tocVisible,
     searchRoot: s.searchRoot,
+    editMode: s.editMode,
     window,
     card: cardStore.get(),
   };
@@ -130,7 +134,10 @@ export async function saveSessionNow(layout?: unknown) {
   }
   try {
     const win = await currentWindowState();
-    await api.saveSession(JSON.stringify(sessionPayload(layout, win)));
+    // 未显式传入布局时取当前实时布局：防抖保存（主题/字号/卡片选项变更都会触发）
+    // 此前会用 layout:null 覆盖会话，把打开的文档列表清空。
+    const live = layout ?? dockRef.api?.toJSON() ?? null;
+    await api.saveSession(JSON.stringify(sessionPayload(live, win)));
     dirty = false;
   } catch {
     // 保存失败不阻断退出

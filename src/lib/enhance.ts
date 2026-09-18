@@ -110,11 +110,13 @@ async function enhanceMermaid(root: HTMLElement, forcedTheme?: "light" | "dark")
 /**
  * 注入 HTML 后的增强（幂等）：高亮、公式、图表。
  * opts.mermaidTheme 可强制 mermaid 明暗（卡片导出按模板主题传入）。
+ * opts.skipMermaid 用于编辑面板打字期间降级：mermaid 很重，空闲后再用
+ * `enhanceMermaidOnly` 补跑。
  * 返回文档是否包含 mermaid（用于提示预加载）。
  */
 export async function enhanceChunk(
   root: HTMLElement,
-  opts?: { mermaidTheme?: "light" | "dark" },
+  opts?: { mermaidTheme?: "light" | "dark"; skipMermaid?: boolean },
 ) {
   root.querySelectorAll("img:not([data-lz])").forEach((img) => {
     img.setAttribute("loading", "lazy");
@@ -123,8 +125,18 @@ export async function enhanceChunk(
   await Promise.all([
     enhanceCode(root),
     enhanceMath(root),
-    enhanceMermaid(root, opts?.mermaidTheme),
+    opts?.skipMermaid
+      ? Promise.resolve()
+      : enhanceMermaid(root, opts?.mermaidTheme),
   ]);
+}
+
+/** 仅补跑 mermaid（编辑面板打字空闲后调用） */
+export async function enhanceMermaidOnly(
+  root: HTMLElement,
+  mermaidTheme?: "light" | "dark",
+) {
+  await enhanceMermaid(root, mermaidTheme);
 }
 
 /** 文档级增强入口（与 chunk 相同，预留差异） */

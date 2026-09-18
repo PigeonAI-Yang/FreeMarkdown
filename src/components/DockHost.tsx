@@ -18,11 +18,13 @@ import {
   actions,
   openFile,
   openCardPanel,
+  openEditPanel,
   rebuildState,
 } from "../lib/store";
 import { sessionMarkDirty } from "../lib/session";
 import { MarkdownPane } from "./MarkdownPane";
 import { CardPanel } from "../card/CardPanel";
+import { EditPane } from "../edit/EditPane";
 import { getChrome } from "../lib/webview2";
 import { usePointerTabDrag } from "./useTabDrag";
 
@@ -146,7 +148,10 @@ function scheduleLayoutSave(api: DockviewApi) {
 
 export function DockHost({ layout }: { layout: SerializedDockview | null }) {
   const app = useApp();
-  const components = useMemo(() => ({ doc: MarkdownPane, card: CardPanel }), []);
+  const components = useMemo(
+    () => ({ doc: MarkdownPane, card: CardPanel, edit: EditPane }),
+    [],
+  );
   const watermark = useMemo(() => Watermark, []);
   const tab = useMemo(() => CtxTab, []);
   const apiRef = useRef<DockviewApi | null>(null);
@@ -182,14 +187,26 @@ export function DockHost({ layout }: { layout: SerializedDockview | null }) {
 
     // 网格重建优先于启动布局：重建时按登记表恢复文档，
     // 不再套用启动时那份旧布局（那会把现场覆盖掉）。
-    if (rebuildState.paths.length > 0 || rebuildState.cardPaths.length > 0) {
-      const { paths, cardPaths, focus } = rebuildState;
+    if (
+      rebuildState.paths.length > 0 ||
+      rebuildState.cardPaths.length > 0 ||
+      rebuildState.editPaths.length > 0
+    ) {
+      const { paths, cardPaths, editPaths, focus } = rebuildState;
       rebuildState.paths = [];
       rebuildState.cardPaths = [];
+      rebuildState.editPaths = [];
       rebuildState.focus = null;
       for (const p of paths) openFile(p);
       for (const p of cardPaths) openCardPanel(p);
-      if (focus) api.getPanel(`doc:${focus}`)?.api.setActive();
+      for (const p of editPaths) openEditPanel(p);
+      if (focus) {
+        const panel =
+          api.getPanel(`doc:${focus}`) ??
+          api.getPanel(`edit:${focus}`) ??
+          api.getPanel(`card:${focus}`);
+        panel?.api.setActive();
+      }
     } else if (layout && layout.panels && Object.keys(layout.panels).length > 0) {
       try {
         api.fromJSON(layout);

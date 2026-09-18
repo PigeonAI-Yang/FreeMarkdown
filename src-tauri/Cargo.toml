@@ -27,6 +27,7 @@ regex = "1"
 urlencoding = "2"
 base64 = "0.22"
 image = { version = "0.25", default-features = false, features = ["png"] }
+notify = { version = "8.2.0", default-features = false, features = ["macos_fsevent"] }
 
 [target.'cfg(windows)'.dependencies]
 webview2-com = "0.38"
@@ -37,3 +38,8 @@ opt-level = 3
 lto = "thin"
 codegen-units = 1
 strip = true
+
+# dev 下依赖用 O2：comrak 解析 2MB 文档在 opt-level=0 要 ~1.5s（进入编辑直接超预算），
+# 依赖优化后 dev 实测与 release 同量级；本项目自身代码仍保持可调试的优化级别。
+[profile.dev.package."*"]
+opt-level = 2

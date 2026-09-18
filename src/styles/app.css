@@ -18,6 +18,9 @@
   --selection: #b3c7f766;
   --shadow: 0 8px 24px rgba(28, 33, 40, 0.12);
   --scrollbar: #c9ced6;
+  /* 卡片预览舞台点阵：浅色主题 = 淡底 + 稍深的点 */
+  --stage-bg: #eceef2;
+  --stage-dot: #d2d7df;
 }
 
 :root[data-theme="dark"] {
@@ -36,6 +39,21 @@
   --selection: #3b3b3b;
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   --scrollbar: #434343;
+  /* 卡片预览舞台点阵：深色主题 = 深底 + 稍亮的点 */
+  --stage-bg: #141414;
+  --stage-dot: #3a3a3a;
+  /* 编辑面板（CodeMirror）配色 */
+  --ed-bg: #1b1b1b;
+  --ed-gutter-bg: #202020;
+  --ed-gutter-fg: #5f5f5f;
+  --ed-active-line: #242424;
+  --ed-caret: #e8e8e8;
+  --ed-mark: #6e6e6e;
+  --ed-heading: #7ab7ff;
+  --ed-code: #e5a06a;
+  --ed-string: #7dd3a8;
+  --ed-match: #4a4020;
+  --ed-match-sel: #6b5a22;
 }
 
 @theme inline {

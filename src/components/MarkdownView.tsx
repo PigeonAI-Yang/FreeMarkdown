@@ -10,12 +10,14 @@ import { api } from "../lib/ipc";
 import {
   consumePendingJump,
   jumpRegistry,
+  onDocSaved,
   scrollMap,
   setActiveHeading,
   setDocInfo,
   setToc,
 } from "../lib/store";
 import { enhanceChunk } from "../lib/enhance";
+import { useFileWatch } from "../lib/watch";
 import { Lightbox } from "./Lightbox";
 
 /** 超过此源文件大小走分块虚拟滚动 */
@@ -37,12 +39,32 @@ interface MdViewProps {
 export function MarkdownView({ path }: MdViewProps) {
   const [doc, setDoc] = useState<DocPayload | null>(() => docCache.get(path) ?? null);
   const [error, setError] = useState<string | null>(null);
+  const [reloadSeq, setReloadSeq] = useState(0);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(
     null,
   );
   const bigDoc = !!doc && doc.size > BIG_DOC_BYTES;
+
+  /* ------- 编辑面板保存广播：同路径阅读面板按新 mtime 重读（LRU 自然失效） ------- */
+  useEffect(() => {
+    return onDocSaved((p) => {
+      if (p !== path) return;
+      // 丢掉这份过期载荷，触发重新解析
+      docCache.delete(path);
+      setReloadSeq((n) => n + 1);
+    });
+  }, [path]);
+
+  /* ------- 外部改动监听：磁盘上的文件被别的程序改了 → 热刷新（mtime 变了才刷） ------- */
+  useFileWatch(path, (e) => {
+    const loaded = docCache.get(path);
+    if (loaded && e.mtimeMs === loaded.mtimeMs) return; // 自己保存引起的事件
+    docCache.delete(path);
+    setReloadSeq((n) => n + 1);
+    void api.perfLog(`doc-external-reload:${path}`, 0);
+  });
 
   /* ------- 加载文档（Rust 后台解析，LRU 命中零解析） ------- */
   useEffect(() => {
@@ -72,7 +94,7 @@ export function MarkdownView({ path }: MdViewProps) {
     return () => {
       alive = false;
     };
-  }, [path]);
+  }, [path, reloadSeq]);
 
   /* ------- 内容注入完成后的增强（由子级注入点调用） ------- */
   const afterInject = useCallback(

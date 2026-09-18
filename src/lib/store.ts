@@ -24,6 +24,19 @@ export class Store<T extends object> {
 
 export type Theme = "light" | "dark";
 
+/** 编辑面板形态：仅源码 / 源码+预览 / 仅预览（顶部工具条切换，全局生效） */
+export type EditMode = "editor" | "split" | "preview";
+
+/** 编辑面板对外汇报的状态（顶部工具条显示保存状态与换行/BOM） */
+export interface EditStatus {
+  dirty: boolean;
+  saving: boolean;
+  conflict: number | null;
+  eol: string;
+  bom: boolean;
+  savedAt: number | null;
+}
+
 export interface DocInfo {
   size: number;
   parseMs: number;
@@ -49,6 +62,10 @@ export interface AppState {
   coldStartMs: number | null;
   /** 搜索范围目录；null 表示跟随当前阅读文档所在目录 */
   searchRoot: string | null;
+  /** 编辑面板形态（全局） */
+  editMode: EditMode;
+  /** 编辑面板状态登记表（按路径；顶部工具条读它） */
+  editStatus: Record<string, EditStatus>;
   /** 网格重建代数：+1 会重挂 DockHost，拿到全新 dockview 实例 */
   gridEpoch: number;
 }
@@ -71,6 +88,8 @@ export const appStore = new Store<AppState>({
   settingsOpen: false,
   coldStartMs: null,
   searchRoot: null,
+  editMode: "split",
+  editStatus: {},
   gridEpoch: 0,
 });
 
@@ -109,6 +128,8 @@ export const actions: {
 if (import.meta.env.DEV) {
   (window as unknown as Record<string, unknown>).__fm = {
     openFile,
+    openEditPanel,
+    openCardPanel,
     setRootFolder,
     appStore,
     scrollMap,
@@ -130,6 +151,18 @@ export function setActiveHeading(path: string, id: string | null) {
   if (cur[path] !== id) {
     appStore.set({ activeHeading: { ...cur, [path]: id } });
   }
+}
+
+export function setEditStatus(path: string, status: EditStatus | null) {
+  const cur = appStore.get().editStatus;
+  if (status == null) {
+    if (!(path in cur)) return;
+    const next = { ...cur };
+    delete next[path];
+    appStore.set({ editStatus: next });
+    return;
+  }
+  appStore.set({ editStatus: { ...cur, [path]: status } });
 }
 
 export function setDocInfo(path: string, info: DocInfo) {
@@ -185,16 +218,30 @@ export function openDocPaths(api: DockviewApi): string[] {
     .map((p) => p.id.slice(4));
 }
 
+/** 同上，按面板前缀取路径（card: / edit:） */
+export function panelPaths(api: DockviewApi, prefix: "card:" | "edit:"): string[] {
+  return api.panels
+    .filter((p) => p.id.startsWith(prefix))
+    .map((p) => p.id.slice(prefix.length));
+}
+
 /** 重建请求：重挂 DockHost 后用这些路径恢复文档 */
 export const rebuildState: {
   paths: string[];
   cardPaths: string[];
+  editPaths: string[];
   focus: string | null;
-} = { paths: [], cardPaths: [], focus: null };
+} = { paths: [], cardPaths: [], editPaths: [], focus: null };
 
-export function rebuildGrid(paths: string[], focus?: string, cardPaths: string[] = []) {
+export function rebuildGrid(
+  paths: string[],
+  focus?: string,
+  cardPaths: string[] = [],
+  editPaths: string[] = [],
+) {
   rebuildState.paths = paths;
   rebuildState.cardPaths = cardPaths;
+  rebuildState.editPaths = editPaths;
   rebuildState.focus = focus ?? null;
   appStore.set({ gridEpoch: appStore.get().gridEpoch + 1 });
 }
@@ -228,7 +275,12 @@ export function openFile(rawPath: string, opts?: JumpOpts, target?: OpenTarget) 
       console.warn("[grid] 分组视图脱离 DOM，已自动回填修复");
     } else {
       pendingJumps.set(path, opts);
-      rebuildGrid(Array.from(new Set([...openDocPaths(api), path])), path);
+      rebuildGrid(
+        Array.from(new Set([...openDocPaths(api), path])),
+        path,
+        panelPaths(api, "card:"),
+        panelPaths(api, "edit:"),
+      );
       return;
     }
   }
@@ -264,7 +316,12 @@ export function openFile(rawPath: string, opts?: JumpOpts, target?: OpenTarget) 
     // 这时只能用重建兜底，否则就是"点什么都打不开"。
     if (!api.getPanel(panelId)) {
       pendingJumps.set(path, opts);
-      rebuildGrid(Array.from(new Set([...openDocPaths(api), path])), path);
+      rebuildGrid(
+        Array.from(new Set([...openDocPaths(api), path])),
+        path,
+        panelPaths(api, "card:"),
+        panelPaths(api, "edit:"),
+      );
       return;
     }
   }
@@ -285,7 +342,12 @@ export function openCardPanel(rawPath: string) {
   // 同 openFile：网格损坏先就地修复，修不好才重建（重建后卡片面板一并恢复）
   if (gridBroken(api)) {
     if (!repairGrid(api)) {
-      rebuildGrid(Array.from(new Set([...openDocPaths(api), path])), path, [path]);
+      rebuildGrid(
+        Array.from(new Set([...openDocPaths(api), path])),
+        path,
+        [path],
+        panelPaths(api, "edit:"),
+      );
       return;
     }
   }
@@ -308,10 +370,78 @@ export function openCardPanel(rawPath: string) {
   });
 }
 
+/** 打开编辑面板（同一路径复用已有面板；分栏预览由面板内部负责） */
+export function openEditPanel(rawPath: string) {
+  const api = dockRef.api;
+  if (!api) return;
+  const path = normalizePath(rawPath);
+  if (gridBroken(api)) {
+    if (!repairGrid(api)) {
+      rebuildGrid(
+        Array.from(new Set([...openDocPaths(api), path])),
+        path,
+        panelPaths(api, "card:"),
+        [path],
+      );
+      return;
+    }
+  }
+  const panelId = `edit:${path}`;
+  const existing = api.getPanel(panelId);
+  if (existing) {
+    existing.api.setActive();
+    return;
+  }
+  const refPanel = api.activePanel;
+  const refExists = refPanel ? !!api.getPanel(refPanel.id) : false;
+  api.addPanel({
+    id: panelId,
+    component: "edit",
+    title: `编辑 · ${basename(path)}`,
+    params: { path },
+    ...(refExists && refPanel
+      ? { position: { referencePanel: refPanel.id, direction: "within" as const } }
+      : {}),
+  });
+  if (!api.getPanel(panelId)) {
+    rebuildGrid(
+      Array.from(new Set([...openDocPaths(api), path])),
+      path,
+      panelPaths(api, "card:"),
+      [path],
+    );
+    return;
+  }
+  // 点「编辑」就是要看到编辑器：让新面板成为分组内的活动标签
+  // （addPanel 只加标签不激活，落在非活动标签上的编辑面板会一直处于冻结态）
+  api.getPanel(panelId)?.api.setActive();
+}
+
 export function consumePendingJump(path: string) {
   const opts = pendingJumps.get(path);
   pendingJumps.delete(path);
   return opts;
+}
+
+/* ---------- 保存广播：编辑面板落盘后通知同路径的阅读面板刷新 ---------- */
+
+const docSavedListeners = new Set<(path: string, mtimeMs: number) => void>();
+
+export function onDocSaved(cb: (path: string, mtimeMs: number) => void): () => void {
+  docSavedListeners.add(cb);
+  return () => {
+    docSavedListeners.delete(cb);
+  };
+}
+
+export function emitDocSaved(path: string, mtimeMs: number) {
+  for (const cb of [...docSavedListeners]) {
+    try {
+      cb(path, mtimeMs);
+    } catch (e) {
+      console.warn("[doc-saved] 监听器异常:", e);
+    }
+  }
 }
 
 export function setRootFolder(path: string | null) {
