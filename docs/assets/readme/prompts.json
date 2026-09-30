@@ -1,0 +1,15 @@
+{
+  "mode": "built-in imagegen",
+  "assets": [
+    {
+      "file": "split-columns-poster.png",
+      "source": "split-columns.png",
+      "prompt": "Use case: ads-marketing. Edit target: the attached real FreeMarkdown application screenshot, showing four Markdown documents in four side-by-side panes. Create a polished GitHub README product demonstration poster in landscape 4:3. Preserve the screenshot as an intact, flat, front-facing rectangular photographic insert. Keep its original aspect ratio, all four panes, toolbar, tabs, document text, syntax colors, tables, diagram and scrollbars. Do not redraw, rewrite, rearrange, invent, simplify or remove anything inside the screenshot. The real screenshot is the main subject and occupies about 88% of the canvas width, large enough to read. Surround it with warm off-white space, a restrained cobalt-blue and teal accent, subtly textured paper-like background, rounded outer frame and a soft realistic shadow. Elegant editorial software launch design, calm and confident, no busy ornaments, no devices, no people, no badges. Above the screenshot, left aligned, typeset exactly these three lines with a clear hierarchy: small brand name 'FreeMarkdown'; large bold Chinese headline '多份文档，同屏阅读。'; smaller Chinese caption '四栏并排 · 各自滚动 · 随时对照'. Do not add any other words. Keep title and screenshot balanced, and use straight-on geometry to preserve readable UI. This is a promotional framing of a real application, not a redesigned or imagined UI."
+    },
+    {
+      "file": "split-grid-poster.png",
+      "source": "split-grid.png",
+      "prompt": "Use case: ads-marketing. Edit target: the attached real FreeMarkdown screenshot showing a light-theme two-by-two grid of four Markdown documents. Make a landscape 4:3 GitHub README product demonstration poster, visually coordinated with a cobalt-blue and teal software brand. Preserve the real screenshot as one complete flat, front-facing insert, retaining its aspect ratio and exact internal interface: four panes, all toolbar buttons, tabs, Chinese document headings and text, TypeScript code, tables, flow diagram, colors and scrollbars. Do not redraw, rewrite, invent, simplify, crop, rearrange, or remove any interface content. The screenshot should occupy about 88% of the canvas width and be large enough to read. Use a restrained midnight-navy background, gentle blue-to-teal light at the outer corners, generous spacing, a subtle rounded outer frame and soft shadow. Calm premium editorial product design. Above the screenshot, left aligned, render exactly three lines: small brand 'FreeMarkdown'; large bold white Chinese headline '分屏布局，按需安排。'; smaller pale-blue caption '四格对照 · 独立滚动 · 保留布局'. Add no other words, no devices, no people, no badges, no fake UI and no perspective skew. This is framing of a real app screenshot, not a redesigned interface."
+    }
+  ]
+}

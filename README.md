@@ -1,16 +1,22 @@
 # FreeMarkdown
 
-**打开本地 Markdown，接着读、改、导出。**
+**多份 Markdown，同屏分屏阅读。**
 
-FreeMarkdown 是一款面向 Windows 的桌面应用。你可以在同一个窗口里阅读多份文档，切换到源码编辑并实时预览，再把内容导出为图片卡片。文档仍保存在原来的文件夹中。
+FreeMarkdown 是一款以多文档分屏阅读为核心的 Windows 桌面应用。把项目说明、研究笔记、接口代码和流程图放在同一屏，随时对照，减少来回切换。需要修改或分享时，也可以打开编辑器或导出图片卡片。文档仍保存在原来的文件夹中。
 
-![FreeMarkdown 品牌插画：层叠的纸页与阅读窗格](docs/assets/readme/hero.png)
+[![FreeMarkdown 演示海报：四份 Markdown 文档在同一个窗口中并排阅读](docs/assets/readme/split-columns-poster.png)](docs/assets/readme/split-columns.png)
+
+## 相关资料，放在同一屏
+
+把原稿与修改稿并排比较，或同时参考说明、代码和笔记。分屏可以横向排列，也可以上下组合；每个窗格独立滚动，并保留自己的阅读位置。应用会保存已打开的文档和布局，供下次启动时恢复。
+
+[![FreeMarkdown 演示海报：浅色主题下四份文档组成上下分屏的四格布局](docs/assets/readme/split-grid-poster.png)](docs/assets/readme/split-grid.png)
+
+以上演示海报基于软件实机截图排版，使用示例文档。点击图片可查看原始截图。
 
 ## 打开文档，继续阅读
 
-打开单个 `.md` 或 `.markdown` 文件，也可以打开文件夹，从侧边栏浏览其中的文档。标签页和分屏适合对照资料；目录、浅色与深色主题、字号和阅读宽度设置帮助你调整阅读方式。应用会保存已打开的文档和布局，供下次启动时恢复。
-
-![FreeMarkdown 实机截图：深色主题下阅读 Markdown 文档](docs/assets/readme/reader.png)
+打开单个 `.md` 或 `.markdown` 文件，也可以打开文件夹，从侧边栏浏览其中的文档。目录、浅色与深色主题、字号和阅读宽度设置帮助你调整阅读方式。
 
 在 Windows 中关联 Markdown 文件后，从资源管理器打开文档会交给已有的 FreeMarkdown 窗口处理。软件保持单实例运行。其他程序改动了文件时，阅读视图会更新；按 `F5` 可以手动刷新当前文档。
 
