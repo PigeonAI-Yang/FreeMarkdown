@@ -1,5 +1,5 @@
 import { api } from "./ipc";
-import { appStore, dockRef, scrollMap, type EditMode } from "./store";
+import { appStore, dockRef, scrollMap, type DocWidth, type EditMode } from "./store";
 import {
   cardStore,
   DEFAULT_CARD_SETTINGS,
@@ -22,11 +22,49 @@ export interface SessionData {
   scroll: Record<string, number>;
   theme: "light" | "dark";
   fontSize: number;
+  /** 阅读栏宽档位（新增字段，缺省走 DEFAULTS，不改版本号） */
+  docWidth: DocWidth;
+  /** 代码块默认换行（新增字段，缺省走 DEFAULTS） */
+  codeWrap: boolean;
+  /** 阅读区底色（按主题存） */
+  docBgLight: string;
+  docBgDark: string;
+  /** 浮层侧栏底色（按主题存） */
+  floatBgLight: string;
+  floatBgDark: string;
+  /** 编辑器标记符号色（按主题存） */
+  edMarkLight: string;
+  edMarkDark: string;
+  /** 编辑器标题色（按主题存） */
+  edHeadingLight: string;
+  edHeadingDark: string;
+  /** 编辑器代码色（按主题存） */
+  edCodeLight: string;
+  edCodeDark: string;
+  /** 编辑器字符串色（按主题存） */
+  edStringLight: string;
+  edStringDark: string;
+  /** 编辑器搜索匹配色（按主题存） */
+  edMatchLight: string;
+  edMatchDark: string;
+  /** 编辑器行号色（按主题存） */
+  edGutterLight: string;
+  edGutterDark: string;
+  /** 编辑器字号（不分主题） */
+  edFontSize: number;
+  /** 编辑器行高（不分主题） */
+  edLineHeight: number;
+  /** 诊断模式（不持久化，重启后关） */
+  diagnosticMode?: boolean;
   rootFolder: string | null;
   recentFiles: string[];
   recentFolders: string[];
   sidebarVisible: boolean;
   tocVisible: boolean;
+  /** 侧边栏宽度（px） */
+  sidebarWidth: number;
+  /** TOC 侧栏宽度（px） */
+  tocWidth: number;
   searchRoot: string | null;
   /** 编辑面板形态：源码 / 分栏 / 预览（全局，顶部工具条切换） */
   editMode: EditMode;
@@ -43,11 +81,33 @@ const DEFAULTS: SessionData = {
     ? "dark"
     : "light",
   fontSize: 17,
+  docWidth: "medium",
+  codeWrap: true,
+  docBgLight: "#f7f1e6",
+  docBgDark: "#232323",
+  floatBgLight: "#ebe4d5",
+  floatBgDark: "#1f1f1f",
+  edMarkLight: "#a89e8a",
+  edMarkDark: "#6e6e6e",
+  edHeadingLight: "#4f5bd5",
+  edHeadingDark: "#7ab7ff",
+  edCodeLight: "#b25e09",
+  edCodeDark: "#e5a06a",
+  edStringLight: "#0a7f4f",
+  edStringDark: "#7dd3a8",
+  edMatchLight: "#ffd8a8",
+  edMatchDark: "#4a4020",
+  edGutterLight: "#a8a299",
+  edGutterDark: "#5f5f5f",
+  edFontSize: 13,
+  edLineHeight: 1.7,
   rootFolder: null,
   recentFiles: [],
   recentFolders: [],
   sidebarVisible: true,
   tocVisible: true,
+  sidebarWidth: 240,
+  tocWidth: 240,
   searchRoot: null,
   editMode: "split",
   window: null,
@@ -79,11 +139,34 @@ export function sessionPayload(layout: unknown, window: WindowState | null): Ses
     scroll: Object.fromEntries(scrollMap),
     theme: s.theme,
     fontSize: s.fontSize,
+    docWidth: s.docWidth,
+    codeWrap: s.codeWrap,
+    docBgLight: s.docBgLight,
+    docBgDark: s.docBgDark,
+    floatBgLight: s.floatBgLight,
+    floatBgDark: s.floatBgDark,
+    edMarkLight: s.edMarkLight,
+    edMarkDark: s.edMarkDark,
+    edHeadingLight: s.edHeadingLight,
+    edHeadingDark: s.edHeadingDark,
+    edCodeLight: s.edCodeLight,
+    edCodeDark: s.edCodeDark,
+    edStringLight: s.edStringLight,
+    edStringDark: s.edStringDark,
+    edMatchLight: s.edMatchLight,
+    edMatchDark: s.edMatchDark,
+    edGutterLight: s.edGutterLight,
+    edGutterDark: s.edGutterDark,
+    edFontSize: s.edFontSize,
+    edLineHeight: s.edLineHeight,
+    diagnosticMode: s.diagnosticMode,
     rootFolder: s.rootFolder,
     recentFiles: s.recentFiles,
     recentFolders: s.recentFolders,
     sidebarVisible: s.sidebarVisible,
     tocVisible: s.tocVisible,
+    sidebarWidth: s.sidebarWidth,
+    tocWidth: s.tocWidth,
     searchRoot: s.searchRoot,
     editMode: s.editMode,
     window,

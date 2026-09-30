@@ -2,9 +2,6 @@ import React, { useEffect, useRef } from "react";
 import { appStore, jumpRegistry, useApp } from "../lib/store";
 import { floatBaseStyle, useFloatPanel, useScrim } from "./usePanelAnim";
 
-/** 面板全宽 */
-const PANEL_W = 240;
-
 /**
  * TOC 目录侧栏：点击跳转 + 滚动联动高亮；显隐直接切换，无动画。
  */
@@ -33,8 +30,14 @@ export function TocPanel() {
   return (
     <aside
       ref={nodeRef as React.Ref<HTMLElement>}
-      className="flex h-full w-60 flex-col overflow-hidden border-r border-border-app bg-bg"
-      style={floatBaseStyle("left", !shown)}
+      className="flex flex-col overflow-hidden border-r border-border-app bg-bg"
+      style={{
+        ...floatBaseStyle("left", !shown),
+        width: app.tocWidth,
+        minWidth: 180,
+        maxWidth: "70vw",
+        borderTopRightRadius: 10,
+      }}
     >
       <div className="flex items-center px-3 pt-3 pb-1 text-[11px] font-medium tracking-wide text-text-3 uppercase">
         目录

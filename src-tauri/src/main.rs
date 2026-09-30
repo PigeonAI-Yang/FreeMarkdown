@@ -7,8 +7,10 @@ mod search;
 mod session;
 mod watch;
 
+use std::path::{Path, PathBuf};
+use std::sync::Mutex;
 use std::time::Instant;
-use tauri::Manager;
+use tauri::{Emitter, Manager, State};
 
 /// 进程起点，用于冷启动计时（main 入口，近似进程启动时刻）
 pub fn process_start() -> Instant {
@@ -169,10 +171,68 @@ fn perf_log(app: tauri::AppHandle, label: String, ms: u64) {
     }
 }
 
+#[derive(Default)]
+struct OpenFileRequests(Mutex<Vec<String>>);
+
+impl OpenFileRequests {
+    fn new(paths: Vec<String>) -> Self {
+        Self(Mutex::new(paths))
+    }
+
+    fn push(&self, paths: Vec<String>) {
+        self.0
+            .lock()
+            .expect("open-file request queue poisoned")
+            .extend(paths);
+    }
+
+    fn take(&self) -> Vec<String> {
+        std::mem::take(&mut *self.0.lock().expect("open-file request queue poisoned"))
+    }
+}
+
+fn markdown_file_args(
+    args: impl IntoIterator<Item = std::ffi::OsString>,
+    cwd: &Path,
+) -> Vec<String> {
+    let mut args = args.into_iter();
+    let _executable = args.next();
+    args.filter_map(|arg| {
+        let path = PathBuf::from(arg);
+        let extension = path.extension()?.to_string_lossy();
+        if !extension.eq_ignore_ascii_case("md") && !extension.eq_ignore_ascii_case("markdown") {
+            return None;
+        }
+        let path = if path.is_absolute() {
+            path
+        } else {
+            cwd.join(path)
+        };
+        Some(path.to_string_lossy().into_owned())
+    })
+    .collect()
+}
+
+#[tauri::command]
+fn take_open_file_requests(requests: State<'_, OpenFileRequests>) -> Vec<String> {
+    requests.take()
+}
+
 fn main() {
     process_start();
+    let cwd = std::env::current_dir().unwrap_or_default();
+    let startup_paths = markdown_file_args(std::env::args_os(), &cwd);
     tauri::Builder::default()
-        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+        .manage(OpenFileRequests::new(startup_paths))
+        .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
+            let paths = markdown_file_args(
+                argv.into_iter().map(std::ffi::OsString::from),
+                Path::new(&cwd),
+            );
+            if !paths.is_empty() {
+                app.state::<OpenFileRequests>().push(paths);
+                let _ = app.emit("app:open-file-requests", ());
+            }
             if let Some(w) = app.get_webview_window("main") {
                 let _ = w.unminimize();
                 let _ = w.set_focus();
@@ -221,6 +281,7 @@ fn main() {
             search::search_folder,
             session::session_save,
             session::session_load,
+            take_open_file_requests,
             open_external,
             fs_reveal,
             startup_ms,
@@ -233,4 +294,46 @@ fn main() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::markdown_file_args;
+    use std::ffi::OsString;
+    use std::path::Path;
+
+    #[test]
+    fn markdown_file_args_keeps_markdown_files_and_ignores_other_arguments() {
+        let paths = markdown_file_args(
+            [
+                OsString::from(r"C:\Apps\FreeMarkdown\freemdown.exe"),
+                OsString::from(r"C:\Docs\selected file.MD"),
+                OsString::from("--safe-mode"),
+                OsString::from(r"C:\Docs\notes.markdown"),
+                OsString::from(r"C:\Docs\readme.txt"),
+            ],
+            Path::new(r"C:\Working"),
+        );
+
+        assert_eq!(
+            paths,
+            vec![
+                r"C:\Docs\selected file.MD".to_string(),
+                r"C:\Docs\notes.markdown".to_string(),
+            ]
+        );
+    }
+
+    #[test]
+    fn markdown_file_args_resolves_relative_paths_from_the_launch_directory() {
+        let paths = markdown_file_args(
+            [
+                OsString::from("freemdown.exe"),
+                OsString::from("docs/selected.md"),
+            ],
+            Path::new(r"C:\Working"),
+        );
+
+        assert_eq!(paths, vec![r"C:\Working\docs/selected.md".to_string()]);
+    }
 }

@@ -1,42 +1,59 @@
 # FreeMarkdown
 
-本地 Markdown 阅读器（以读为主，不做编辑器）：高性能、秒开秒关、外观精致，支持同屏多窗格同时阅读多个文档。
+**打开本地 Markdown，接着读、改、导出。**
 
-平台 Windows 优先（WebView2），代码结构保持跨平台。
+FreeMarkdown 是一款面向 Windows 的桌面应用。你可以在同一个窗口里阅读多份文档，切换到源码编辑并实时预览，再把内容导出为图片卡片。文档仍保存在原来的文件夹中。
 
-## 技术栈
+![FreeMarkdown 品牌插画：层叠的纸页与阅读窗格](docs/assets/readme/hero.png)
 
-- 后端：Tauri 2 + Rust，正文解析用 comrak（GFM 兼容），后台线程解析为 HTML
-- 前端：React 19 + TypeScript + Vite
-- 多窗格布局：dockview（标签页 / 网格分屏 / 拖拽 / 浮动组）
-- 公式 KaTeX、图表 mermaid（WebView 侧增强）；代码高亮 highlight.js
-- 样式 Tailwind CSS v4 + 设计 token，正文排版以 github-markdown-css 为底定制
-- 所有依赖仅宽松许可（MIT / Apache-2.0 / BSD）
+## 打开文档，继续阅读
 
-## 功能
+打开单个 `.md` 或 `.markdown` 文件，也可以打开文件夹，从侧边栏浏览其中的文档。标签页和分屏适合对照资料；目录、浅色与深色主题、字号和阅读宽度设置帮助你调整阅读方式。应用会保存已打开的文档和布局，供下次启动时恢复。
 
-1. 打开文件夹或单个 `.md` 文件；侧边文件树 + 标签页 + 最近打开
-2. dockview 多窗格：拖拽分屏、标签分组、窗格最大化；未激活窗格冻结渲染（不挂 DOM）
-3. 阅读体验：TOC 目录浮层（点击跳转、滚动联动高亮）、图片点击缩放、表格 / 任务列表 / 删除线 / 脚注
-4. 外观：浅色 / 深色主题切换、正文限宽 72ch、可调字号、中文字体优先系统字体栈
-5. 全文搜索：Rust 并行搜索当前文件夹全部 `.md`，秒级返回，点击结果跳转定位（sourcepos 精确定位 + 常驻高亮）
-6. 会话持久化：退出时保存打开文件列表、布局树、每窗格滚动位置、主题、窗口尺寸；启动直接恢复现场
-7. 单实例运行：二次启动唤起已有窗口
+![FreeMarkdown 实机截图：深色主题下阅读 Markdown 文档](docs/assets/readme/reader.png)
 
-## 启动步骤
+在 Windows 中关联 Markdown 文件后，从资源管理器打开文档会交给已有的 FreeMarkdown 窗口处理。软件保持单实例运行。其他程序改动了文件时，阅读视图会更新；按 `F5` 可以手动刷新当前文档。
 
-```bash
-# 安装依赖
+## 修改文字，边写边看
+
+按 `Ctrl+Shift+E` 打开当前文档的编辑面板。你可以选择源码、分栏或预览视图。编辑器支持自动保存和 `Ctrl+S`；如果磁盘上的文件在编辑期间被其他程序修改，应用会提示你选择重新加载、覆盖或另存。
+
+![FreeMarkdown 实机截图：浅色主题下的源码编辑和分栏预览](docs/assets/readme/editor.png)
+
+## 把内容导出为图片
+
+按 `Ctrl+E` 打开卡片面板。选择模板和导出方式，预览排版后保存为 PNG 或 JPEG，也可以将 PNG 复制到剪贴板。
+
+![FreeMarkdown 实机截图：卡片模板、导出设置与实时预览](docs/assets/readme/cards.png)
+
+## 常用操作
+
+| 操作 | 快捷键 |
+| --- | --- |
+| 打开文件 | `Ctrl+O` |
+| 打开文件夹 | `Ctrl+Shift+O` |
+| 搜索当前文件夹中的 Markdown 文档 | `Ctrl+Shift+F` |
+| 编辑当前文档 | `Ctrl+Shift+E` |
+| 打开卡片面板 | `Ctrl+E` |
+| 刷新当前文档 | `F5` |
+
+## 从源码运行
+
+当前仓库提供源码。请先准备 Windows 开发环境、Node.js、pnpm 和 Rust；Windows 所需组件见 [Tauri 的环境准备说明](https://v2.tauri.app/start/prerequisites/)。
+
+```powershell
+git clone https://github.com/PigeonAI-Yang/FreeMarkdown.git
+cd FreeMarkdown
 pnpm install
-
-# 开发版（前端热更新 + Rust 增量编译）
 pnpm tauri dev
-
-# 生产构建
-pnpm build
-cd src-tauri && cargo build --release --features custom-protocol
 ```
 
-## 已知问题
+构建 Windows 安装包：
 
-- Windows 上 `dragDropEnabled: true` 会导致 wry 注册窗口级 `IDropTarget`，所有不带 `CF_HDROP` 的内部 HTML5 拖拽都被显示为禁止放置，dockview 标签分屏无法使用。因此目前关闭系统文件拖放，文件打开走工具栏按钮 / `Ctrl+O` / `Ctrl+Shift+O`。后续走 DOM + `ICoreWebView2File.Path` 路线另行验证（参考 `tauri-plugin-windows-file-drop`）。
+```powershell
+pnpm tauri build
+```
+
+安装包输出到 `src-tauri/target/release/bundle/nsis/`。`pnpm build` 只构建前端，不会生成桌面安装包。
+
+FreeMarkdown 使用 Tauri 2、Rust、React 和 TypeScript。Markdown 渲染基于 comrak，并支持代码高亮、公式和 Mermaid 图表。

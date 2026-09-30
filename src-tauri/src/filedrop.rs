@@ -6,13 +6,14 @@
 //! 读取，字符串 IPC 消息由 wry 自己处理，互不干扰。
 
 use serde::Deserialize;
-use tauri::{Emitter, EventTarget, Manager};
+use tauri::Emitter;
 
 /// 前端桥接消息（WebMessageAsJson 读取）
 #[derive(Deserialize)]
 struct FileOpenMessage {
     #[serde(rename = "type")]
     kind: String,
+    #[allow(dead_code)]
     name: String,
     #[serde(rename = "target")]
     drop_target: Option<DropTarget>,
@@ -34,13 +35,7 @@ pub fn install(
     webview: &tauri::Webview<tauri::Wry>,
     _app: &tauri::AppHandle<tauri::Wry>,
 ) -> tauri::Result<()> {
-    use webview2_com::{
-        Microsoft::Web::WebView2::Win32::{
-            ICoreWebView2File, ICoreWebView2WebMessageReceivedEventArgs2,
-        },
-        WebMessageReceivedEventHandler,
-    };
-    use windows::core::Interface;
+    use webview2_com::WebMessageReceivedEventHandler;
 
     let label = webview.label().to_string();
     let app_handle = _app.clone();
@@ -51,6 +46,11 @@ pub fn install(
             let controller = platform.controller();
             // SAFETY: 同上
             let webview2 = unsafe { controller.CoreWebView2()? };
+            // 禁用浏览器缩放（Ctrl+滚轮 / Ctrl+±）：我们自己的字号缩放走 --doc-font-size，
+            // 浏览器缩放会改 CSS transform 导致布局抖动，必须关
+            if let Ok(settings) = unsafe { webview2.Settings() } {
+                unsafe { settings.SetIsZoomControlEnabled(false)? };
+            }
 
             let app_inner = app_handle.clone();
             let label_inner = label.clone();
@@ -72,7 +72,7 @@ pub fn install(
                 )?;
             }
             // handler 随 WebView 生命周期
-            std::mem::forget(token);
+            let _ = token;
             eprintln!("[fileopen] handler registered (label={label})");
             Ok(())
         })();
@@ -116,7 +116,7 @@ fn on_web_message(
     // SAFETY: COM 对象在回调线程内当场使用，只复制出路径字符串
     let bridge: windows::core::Result<()> = (|| {
         let args2: ICoreWebView2WebMessageReceivedEventArgs2 =
-            unsafe { args.cast::<ICoreWebView2WebMessageReceivedEventArgs2>()? };
+            args.cast::<ICoreWebView2WebMessageReceivedEventArgs2>()?;
         let objects = unsafe { args2.AdditionalObjects()? };
         let mut count = 0u32;
         unsafe { objects.Count(&mut count)? };

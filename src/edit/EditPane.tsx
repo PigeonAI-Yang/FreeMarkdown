@@ -35,6 +35,7 @@ export function EditPane(props: IDockviewPanelProps<EditParams>) {
     <EditView
       key={path}
       path={path}
+      panelId={props.api.id}
       isActive={() => props.api.isActive}
       onRequestClose={() => props.api.close()}
     />

@@ -61,11 +61,12 @@ export function floatBaseStyle(
 ): React.CSSProperties {
   return {
     position: "absolute",
-    top: "var(--float-top, 34px)",
+    // 顶部留出与工具栏的间距，让浮层像「浮起」的卡片而非贴边抽屉
+    top: "calc(var(--float-top, 34px) + 20px)",
     bottom: 0,
     [side]: 0,
     zIndex: 30,
-    background: "var(--bg)",
+    background: "var(--float-bg, var(--bg))",
     boxShadow:
       side === "left"
         ? "8px 0 24px rgba(0,0,0,0.18)"

@@ -3,6 +3,8 @@ import { EditorView } from "@codemirror/view";
 import type { SourcePayload } from "../lib/ipc";
 import { api, basename, dirname } from "../lib/ipc";
 import {
+  actions,
+  appStore,
   emitDocSaved,
   openEditPanel,
   setEditStatus,
@@ -10,7 +12,7 @@ import {
   useApp,
   type EditMode,
 } from "../lib/store";
-import { enhanceChunk, enhanceMermaidOnly } from "../lib/enhance";
+import { enhanceChunk, enhanceMermaidOnly, handleCodeBlockClick } from "../lib/enhance";
 import { useFileWatch } from "../lib/watch";
 import { BlockPreview } from "./BlockPreview";
 import { newMetrics, PreviewController } from "./previewController";
@@ -45,6 +47,7 @@ const MERMAID_IDLE_MS = 500;
 
 interface Props {
   path: string;
+  panelId: string;
   /** 面板是否活动（全局快捷键作用域判定） */
   isActive: () => boolean;
   /** 「另存为」成功后关闭本面板 */
@@ -58,7 +61,7 @@ interface Props {
  * 编辑缓冲、防抖同步、保存与冲突处理。冻结（面板不可见）时本组件被卸载，
  * 缓冲区与滚动位置留在 editSessions，重新可见时无等待恢复。
  */
-export function EditView({ path, isActive, onRequestClose }: Props) {
+export function EditView({ path, panelId, isActive, onRequestClose }: Props) {
   const [src, setSrc] = useState<SourcePayload | null>(null);
   const [blocks, setBlocks] = useState<PreviewBlock[]>([]);
   const [splice, setSplice] = useState<{ lo: number; hi: number } | null>(null);
@@ -68,6 +71,7 @@ export function EditView({ path, isActive, onRequestClose }: Props) {
   const [saving, setSaving] = useState(false);
   const [conflict, setConflict] = useState<number | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [refreshPrompt, setRefreshPrompt] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const savedAtRef = useRef<number | null>(null);
   /** 自己发起写入的时间（用于过滤"自己保存"触发的监听事件） */
@@ -181,6 +185,28 @@ export function EditView({ path, isActive, onRequestClose }: Props) {
   const saveRef = useRef(save);
   saveRef.current = save;
 
+  // 注册全局保存/撤销/重做入口：Ctrl+S / Ctrl+Z / Ctrl+Y / 顶栏按钮走这里
+  useEffect(() => {
+    actions.save[path] = () => void saveRef.current();
+    actions.undo[path] = () => {
+      const view = viewRef.current;
+      if (view) {
+        import("@codemirror/commands").then(({ undo }) => undo(view));
+      }
+    };
+    actions.redo[path] = () => {
+      const view = viewRef.current;
+      if (view) {
+        import("@codemirror/commands").then(({ redo }) => redo(view));
+      }
+    };
+    return () => {
+      delete actions.save[path];
+      delete actions.undo[path];
+      delete actions.redo[path];
+    };
+  }, [path]);
+
   /* ---------------- 预览增强（打字期降级） ---------------- */
 
   const injectBlock = useCallback((el: HTMLElement) => {
@@ -223,6 +249,9 @@ export function EditView({ path, isActive, onRequestClose }: Props) {
 
   const reloadFromDisk = useCallback(async () => {
     const view = viewRef.current;
+    if (autosaveRef.current) clearTimeout(autosaveRef.current);
+    autosaveRef.current = null;
+    if (mountedRef.current) setRefreshPrompt(false);
     try {
       const payload = await api.readSource(path);
       srcRef.current = payload;
@@ -252,6 +281,24 @@ export function EditView({ path, isActive, onRequestClose }: Props) {
   }, [path]);
   const reloadRef = useRef(reloadFromDisk);
   reloadRef.current = reloadFromDisk;
+
+  useEffect(() => {
+    const refresh = () => {
+      if (!viewRef.current || !srcRef.current) return;
+      if (savingRef.current) return;
+      if (dirtyRef.current) {
+        setRefreshPrompt(true);
+        return;
+      }
+      void reloadRef.current();
+    };
+    actions.refreshPanel[panelId] = refresh;
+    return () => {
+      if (actions.refreshPanel[panelId] === refresh) {
+        delete actions.refreshPanel[panelId];
+      }
+    };
+  }, [panelId]);
 
   const saveAs = useCallback(async () => {
     const view = viewRef.current;
@@ -344,8 +391,10 @@ export function EditView({ path, isActive, onRequestClose }: Props) {
     });
   }, []);
 
+
   /** 点击预览正文块 → 光标跳到对应源码行（并居中） */
   const onPreviewClick = useCallback((e: React.MouseEvent) => {
+    if (handleCodeBlockClick(e.target as HTMLElement)) return;
     const el = (e.target as HTMLElement).closest<HTMLElement>("[data-block]");
     const view = viewRef.current;
     if (!el || !view) return;
@@ -791,6 +840,26 @@ export function EditView({ path, isActive, onRequestClose }: Props) {
 
   return (
     <div className="edit-pane" data-edit-path={path}>
+      {refreshPrompt && (
+        <div className="edit-conflict" data-refresh-prompt role="status">
+          <span>重新载入会丢弃当前编辑器中尚未保存的修改。</span>
+          <button
+            data-refresh-action="reload"
+            disabled={saving}
+            onClick={() => {
+              if (!savingRef.current) void reloadRef.current();
+            }}
+          >
+            重新载入
+          </button>
+          <button
+            data-refresh-action="cancel"
+            onClick={() => setRefreshPrompt(false)}
+          >
+            取消
+          </button>
+        </div>
+      )}
       {conflict != null && (
         <div className="edit-conflict" data-conflict-panel={path}>
           <span>
@@ -816,7 +885,11 @@ export function EditView({ path, isActive, onRequestClose }: Props) {
       {/* 仅预览形态下编辑器只是 hidden、不卸载：保住 CM6 实例、光标与撤销历史，
           冻结（切标签）才真正销毁 DOM。 */}
       <div className={`edit-body mode-${mode}`}>
-        <div className="edit-editor" ref={hostRef} hidden={mode === "preview"} />
+        <div
+          className="edit-editor"
+          ref={hostRef}
+          hidden={mode === "preview"}
+        />
         {mode !== "editor" && (
           <BlockPreview
             blocks={blocks}

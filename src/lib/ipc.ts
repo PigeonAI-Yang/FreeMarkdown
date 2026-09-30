@@ -102,6 +102,7 @@ export const api = {
     invoke<SearchOutcome>("search_folder", { root, query }),
   saveSession: (data: string) => invoke<void>("session_save", { data }),
   loadSession: () => invoke<string | null>("session_load"),
+  takeOpenFileRequests: () => invoke<string[]>("take_open_file_requests"),
   openExternal: (url: string) => invoke<void>("open_external", { url }),
   reveal: (path: string) => invoke<void>("fs_reveal", { path }),
   startupMs: () => invoke<number>("startup_ms"),

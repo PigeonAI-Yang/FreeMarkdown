@@ -93,7 +93,7 @@ export async function exportSave(
       const r = await captureCard(o);
       await invoke<void>("card_write_file", {
         path,
-        data_b64: u8ToBase64(r.bytes),
+        dataB64: u8ToBase64(r.bytes),
       });
       o.onProgress?.({ done: 1, total: 1, label: "完成" });
       return { ok: true, saved: 1, message: path };
@@ -117,7 +117,7 @@ export async function exportSave(
           folder,
           `${o.docBaseName}-${String(i + 1).padStart(2, "0")}.${ext}`,
         ),
-        data_b64: u8ToBase64(r.bytes),
+        dataB64: u8ToBase64(r.bytes),
       });
       saved += 1;
       // 让出事件循环，让进度文本真正刷到界面上
@@ -147,7 +147,7 @@ export async function exportClipboard(
       backgroundColor: o.backgroundColor,
     });
     await invoke<void>("card_clipboard_write_png", {
-      data_b64: u8ToBase64(r.bytes),
+      dataB64: u8ToBase64(r.bytes),
     });
     return { ok: true, message: "已复制到剪贴板" };
   } catch (e) {

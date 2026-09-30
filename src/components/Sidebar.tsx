@@ -4,9 +4,6 @@ import { actions, appStore, openFile, setRootFolder, useApp } from "../lib/store
 import { floatBaseStyle, useFloatPanel, useScrim } from "./usePanelAnim";
 import { sessionMarkDirty } from "../lib/session";
 
-/** 侧边栏全宽 */
-const SIDEBAR_W = 240;
-
 /** 侧边栏：文件目录树（懒加载）+ 最近打开；浮层滑入滑出，不挤占中栏 */
 export function Sidebar() {
   const app = useApp();
@@ -19,8 +16,14 @@ export function Sidebar() {
   return (
     <aside
       ref={nodeRef as React.Ref<HTMLElement>}
-      className="flex h-full w-60 flex-col overflow-hidden border-r border-border-app bg-bg"
-      style={floatBaseStyle("left", !shown)}
+      className="flex flex-col overflow-hidden border-r border-border-app bg-bg"
+      style={{
+        ...floatBaseStyle("left", !shown),
+        width: app.sidebarWidth,
+        minWidth: 180,
+        maxWidth: "70vw",
+        borderTopRightRadius: 10,
+      }}
     >
       <DirHeader />
       {app.rootFolder ? (

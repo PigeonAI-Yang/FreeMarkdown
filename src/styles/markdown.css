@@ -4,6 +4,7 @@
 
 :root {
   --doc-font-size: 17px;
+  /* 兜底值；运行时由 App.tsx 根据 docWidth 覆写 */
   --doc-max-width: 72ch;
 }
 
@@ -11,8 +12,19 @@
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  background: var(--bg-elev);
+  /* 工作台点阵：米黄底 + 深色小点，两侧空白露出，正文区被 .doc-content 盖住 */
+  background: var(--doc-bg);
+  background-image: radial-gradient(
+    circle,
+    var(--stage-dot) 1.1px,
+    transparent 1.3px
+  );
+  background-size: 18px 18px;
+  background-position: 0 0;
   contain: strict;
+  /* 缩放用 zoom（Chromium 原生，GPU 合成，不触发 layout）；
+     --doc-zoom 由 App.tsx 滚轮委托写入，1 = 100% */
+  zoom: var(--doc-zoom, 1);
 }
 
 /* .doc-content 同时携带 markdown-body 类（github-markdown-css 的作用域） */
@@ -22,7 +34,8 @@
   padding: 28px 32px 40vh;
   font-size: var(--doc-font-size);
   font-family: var(--font-sans);
-  background: transparent;
+  /* 实色盖住底下点阵，正文区干净 */
+  background: var(--doc-bg);
   color: var(--text-1);
   min-height: 100%;
 }
@@ -202,4 +215,74 @@
 :root[data-theme="dark"] .hljs-meta,
 :root[data-theme="dark"] .hljs-selector-tag {
   color: #7ee787;
+}
+
+/* ---------- 代码块外壳：语言标签 + 一键复制 ---------- */
+.code-block {
+  position: relative;
+  margin: 1em 0;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  overflow: hidden;
+}
+.code-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 12px;
+  background: var(--bg-active);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-3);
+  user-select: none;
+}
+.code-block-lang {
+  font-family: var(--font-mono);
+  text-transform: lowercase;
+  letter-spacing: 0.4px;
+}
+.code-block-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.code-block-copy,
+.code-block-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 11px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.code-block-copy:hover,
+.code-block-wrap:hover {
+  color: var(--text-1);
+  background: var(--bg-hover);
+}
+.code-block-copy.copied {
+  color: var(--accent);
+}
+/* 换行激活态：按钮常亮 */
+.code-block.wrapped .code-block-wrap {
+  color: var(--accent);
+}
+.code-block > pre {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+/* 默认（全局 codeWrap=wrap 或单块切换后）：软换行 */
+.code-block.wrapped > pre,
+.code-block.wrapped > pre code {
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: anywhere;
 }

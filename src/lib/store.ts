@@ -24,6 +24,9 @@ export class Store<T extends object> {
 
 export type Theme = "light" | "dark";
 
+/** 阅读栏宽档位：narrow 60ch / medium 72ch / wide 88ch / full 无限制 */
+export type DocWidth = "narrow" | "medium" | "wide" | "full";
+
 /** 编辑面板形态：仅源码 / 源码+预览 / 仅预览（顶部工具条切换，全局生效） */
 export type EditMode = "editor" | "split" | "preview";
 
@@ -47,6 +50,40 @@ export interface AppState {
   booted: boolean;
   theme: Theme;
   fontSize: number;
+  /** 阅读栏宽档位（全局，落到 --doc-max-width） */
+  docWidth: DocWidth;
+  /** 代码块默认换行（false = 保持 pre 横滚） */
+  codeWrap: boolean;
+  /** 阅读区底色（按主题存） */
+  docBgLight: string;
+  docBgDark: string;
+  /** 浮层侧栏底色（按主题存） */
+  floatBgLight: string;
+  floatBgDark: string;
+  /** 编辑器标记符号色（# * ` > 等，按主题存） */
+  edMarkLight: string;
+  edMarkDark: string;
+  /** 编辑器标题色（按主题存） */
+  edHeadingLight: string;
+  edHeadingDark: string;
+  /** 编辑器代码色（按主题存） */
+  edCodeLight: string;
+  edCodeDark: string;
+  /** 编辑器字符串色（按主题存） */
+  edStringLight: string;
+  edStringDark: string;
+  /** 编辑器搜索匹配色（按主题存） */
+  edMatchLight: string;
+  edMatchDark: string;
+  /** 编辑器行号色（按主题存） */
+  edGutterLight: string;
+  edGutterDark: string;
+  /** 编辑器字号（不分主题） */
+  edFontSize: number;
+  /** 编辑器行高（不分主题） */
+  edLineHeight: number;
+  /** 诊断模式：显示调试信息（搜索范围/面板状态等），默认关 */
+  diagnosticMode: boolean;
   rootFolder: string | null;
   recentFiles: string[];
   recentFolders: string[];
@@ -58,6 +95,10 @@ export interface AppState {
   searchQuery: string;
   sidebarVisible: boolean;
   tocVisible: boolean;
+  /** 侧边栏宽度（px），悬浮面板左栏 */
+  sidebarWidth: number;
+  /** TOC 目录侧栏宽度（px），悬浮面板右栏 */
+  tocWidth: number;
   settingsOpen: boolean;
   coldStartMs: number | null;
   /** 搜索范围目录；null 表示跟随当前阅读文档所在目录 */
@@ -74,6 +115,27 @@ export const appStore = new Store<AppState>({
   booted: false,
   theme: "light",
   fontSize: 17,
+  docWidth: "medium",
+  codeWrap: true,
+  docBgLight: "#f7f1e6",
+  docBgDark: "#232323",
+  floatBgLight: "#ebe4d5",
+  floatBgDark: "#1f1f1f",
+  edMarkLight: "#a89e8a",
+  edMarkDark: "#6e6e6e",
+  edHeadingLight: "#4f5bd5",
+  edHeadingDark: "#7ab7ff",
+  edCodeLight: "#b25e09",
+  edCodeDark: "#e5a06a",
+  edStringLight: "#0a7f4f",
+  edStringDark: "#7dd3a8",
+  edMatchLight: "#ffd8a8",
+  edMatchDark: "#4a4020",
+  edGutterLight: "#a8a299",
+  edGutterDark: "#5f5f5f",
+  edFontSize: 13,
+  edLineHeight: 1.7,
+  diagnosticMode: false,
   rootFolder: null,
   recentFiles: [],
   recentFolders: [],
@@ -85,6 +147,8 @@ export const appStore = new Store<AppState>({
   searchQuery: "",
   sidebarVisible: true,
   tocVisible: true,
+  sidebarWidth: 240,
+  tocWidth: 240,
   settingsOpen: false,
   coldStartMs: null,
   searchRoot: null,
@@ -119,9 +183,43 @@ export const dockRef: { api: DockviewApi | null } = { api: null };
 export const actions: {
   pickFile: () => void;
   pickFolder: () => Promise<string | null>;
+  /** 按路径保存编辑面板（EditView 注册，path → save 函数） */
+  save: Record<string, () => void>;
+  /** 按路径撤销/重做（EditView 注册，path → undo/redo 函数） */
+  undo: Record<string, () => void>;
+  redo: Record<string, () => void>;
+  /** 按活动 Dockview 面板 id 刷新该面板当前文档 */
+  refreshPanel: Record<string, () => void>;
+  refreshActive: () => void;
+  /** 保存当前活动文档（优先 edit 面板，无则提示） */
+  saveActive: () => void;
+  /** 撤销当前活动文档的编辑（编辑器聚焦时生效） */
+  undoActive: () => void;
+  /** 重做当前活动文档的编辑（编辑器聚焦时生效） */
+  redoActive: () => void;
 } = {
   pickFile: () => {},
   pickFolder: () => Promise.resolve(null),
+  save: {},
+  undo: {},
+  redo: {},
+  refreshPanel: {},
+  refreshActive: () => {
+    const panel = dockRef.api?.activePanel;
+    if (panel) actions.refreshPanel[panel.id]?.();
+  },
+  saveActive: () => {
+    const path = appStore.get().activePanelPath;
+    if (path && actions.save[path]) actions.save[path]();
+  },
+  undoActive: () => {
+    const path = appStore.get().activePanelPath;
+    if (path && actions.undo[path]) actions.undo[path]();
+  },
+  redoActive: () => {
+    const path = appStore.get().activePanelPath;
+    if (path && actions.redo[path]) actions.redo[path]();
+  },
 };
 
 // 仅开发环境：暴露打开入口，供自动化验收驱动真实渲染管线

@@ -10,6 +10,8 @@ import type { CSSProperties, ReactNode } from "react";
 import type { IDockviewPanelProps } from "dockview";
 import { api, basename } from "../lib/ipc";
 import { enhanceChunk } from "../lib/enhance";
+import { actions, onDocSaved } from "../lib/store";
+import { useFileWatch } from "../lib/watch";
 import { cardStore, updateCard } from "./cardStore";
 import { TEMPLATES, getTemplate } from "./templates/registry";
 import type { CardSettings, WatermarkOptions } from "./templates/types";
@@ -117,12 +119,24 @@ export function CardPanel(props: IDockviewPanelProps<{ path: string }>) {
   const [status, setStatus] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
+  useEffect(() => {
+    const refresh = () => setReloadKey((k) => k + 1);
+    actions.refreshPanel[props.api.id] = refresh;
+    return () => {
+      if (actions.refreshPanel[props.api.id] === refresh) {
+        delete actions.refreshPanel[props.api.id];
+      }
+    };
+  }, [props.api.id]);
+
   const rootRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const runIdRef = useRef(0);
+  /** 管线最近一次成功读到的载荷 mtime：外部改动事件据此区分「自己保存」 */
+  const loadedMtimeRef = useRef(0);
   // 命令式 DOM 操作与导出回调用的镜像 ref，避免闭包拿到过期值
   const cutsRef = useRef<CardCut[]>([]);
   const unitsRef = useRef<PagShape[]>([]); // flattenUnits 序列（拆卡按区间克隆的源头）
@@ -221,6 +235,7 @@ export function CardPanel(props: IDockviewPanelProps<{ path: string }>) {
         // 1. 读文档（后端 LRU 命中零解析）
         const doc = await api.readMarkdown(path);
         if (stale()) return;
+        loadedMtimeRef.current = doc.mtimeMs;
         const html = doc.chunks.join("");
         if (!html.trim()) {
           el.innerHTML = "";
@@ -304,6 +319,20 @@ export function CardPanel(props: IDockviewPanelProps<{ path: string }>) {
     settings.mode,
     settings.pageHeight,
   ]);
+
+  /* -- 编辑面板保存广播：同路径卡片面板重跑预览管线（新 mtime 会自然覆盖） -- */
+  useEffect(() => {
+    return onDocSaved((p) => {
+      if (p !== path) return;
+      setReloadKey((k) => k + 1);
+    });
+  }, [path]);
+
+  /* -- 外部改动监听：磁盘上的文件被别的程序改了 → 重跑预览管线（mtime 变了才刷） -- */
+  useFileWatch(path, (e) => {
+    if (e.mtimeMs === loadedMtimeRef.current) return; // 自己保存引起的事件
+    setReloadKey((k) => k + 1);
+  });
 
   /* -- 舞台宽度监听，驱动预览缩放 -- */
   useEffect(() => {

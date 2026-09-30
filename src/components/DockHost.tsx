@@ -22,6 +22,7 @@ import {
   rebuildState,
 } from "../lib/store";
 import { sessionMarkDirty } from "../lib/session";
+import { flushPendingOpenFiles } from "../lib/filedrop";
 import { MarkdownPane } from "./MarkdownPane";
 import { CardPanel } from "../card/CardPanel";
 import { EditPane } from "../edit/EditPane";
@@ -37,16 +38,27 @@ type DocParams = { path: string };
 function CtxTab(props: IDockviewPanelHeaderProps) {
   const path = (props.params as DocParams | undefined)?.path;
   const [title, setTitle] = useState(props.api.title);
+  const [closing, setClosing] = useState(false);
   const midDown = useRef(false);
+  const tabRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const d = props.api.onDidTitleChange((t) => setTitle(t.title));
     return () => d.dispose();
   }, [props.api]);
 
+  // 关闭动画：先收缩 tab（max-width 0 + opacity 0），播完再真正删
+  const closeWithAnim = () => {
+    if (closing) return;
+    setClosing(true);
+    // 动画播完再关，避免其他 tab 提前挤过来
+    setTimeout(() => props.api.close(), 200);
+  };
+
   return (
     <div
-      className="dv-default-tab"
+      ref={tabRef}
+      className={`dv-default-tab ${closing ? "closing" : ""}`}
       data-ctx="tab"
       data-path={path}
       onPointerDown={(e) => {
@@ -56,7 +68,7 @@ function CtxTab(props: IDockviewPanelHeaderProps) {
         // 与内置 tab 一致：中键点击关闭
         if (midDown.current && e.button === 1) {
           midDown.current = false;
-          props.api.close();
+          closeWithAnim();
         }
       }}
       onPointerLeave={() => {
@@ -69,7 +81,7 @@ function CtxTab(props: IDockviewPanelHeaderProps) {
         onPointerDown={(e) => e.preventDefault()}
         onClick={(e) => {
           e.preventDefault();
-          props.api.close();
+          closeWithAnim();
         }}
       >
         <svg
@@ -254,6 +266,7 @@ export function DockHost({ layout }: { layout: SerializedDockview | null }) {
         console.warn("[drop] 桥接失败:", err);
       }
     });
+    flushPendingOpenFiles();
   };
 
   return (

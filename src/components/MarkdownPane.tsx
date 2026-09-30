@@ -30,5 +30,5 @@ export function MarkdownPane(props: IDockviewPanelProps<{ path: string }>) {
   if (!visible) {
     return <div className="frozen-placeholder" />;
   }
-  return <MarkdownView key={path} path={path} />;
+  return <MarkdownView key={path} path={path} panelId={props.api.id} />;
 }

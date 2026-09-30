@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { actions, appStore, useApp } from "../lib/store";
+import { useLayoutEffect, useRef, useState } from "react";
+import { actions, appStore, useApp, type DocWidth } from "../lib/store";
 
 /**
  * 全屏设置页：独占整个窗口（不显示顶部工具栏与阅读区）。
@@ -55,6 +55,9 @@ export function SettingsPage() {
     </div>
   );
 }
+
+const DOC_BG_PRESETS_LIGHT = ["#f7f1e6", "#f4f4f4", "#ffffff", "#e8f0e8"];
+const DOC_BG_PRESETS_DARK = ["#232323", "#1b1b1b", "#2a2a2a", "#1e2a1e"];
 
 const CATEGORIES = [
   {
@@ -112,12 +115,154 @@ const CATEGORIES = [
 
 /* ---------------- 外观 ---------------- */
 
+/** 颜色行：预设色块 + 自定义 color input，按主题绑定 */
+function ColorRow({
+  label,
+  presets,
+  value,
+  onChange,
+}: {
+  label: string;
+  presets: string[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <Row label={label}>
+      <div className="flex items-center gap-2">
+        {presets.map((c) => (
+          <button
+            key={c}
+            className={`h-6 w-6 rounded-full border-2 transition-transform hover:scale-110 ${
+              value === c ? "border-accent" : "border-border-app"
+            }`}
+            style={{ background: c }}
+            title={c}
+            onClick={() => onChange(c)}
+          />
+        ))}
+        <input
+          type="color"
+          className="h-6 w-6 cursor-pointer rounded-full border-2 border-border-app"
+          value={value}
+          title="自定义颜色"
+          onChange={(e) => onChange(e.target.value)}
+        />
+      </div>
+    </Row>
+  );
+}
+
+/** 步进器：−/+ 调数值 */
+function Stepper({
+  value,
+  onChange,
+  min,
+  max,
+  step = 1,
+  unit = "",
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  min: number;
+  max: number;
+  step?: number;
+  unit?: string;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        className="icon-btn border border-border-app"
+        onClick={() => onChange(Math.max(min, value - step))}
+        title="减小"
+      >
+        <span className="px-1 text-[13px]">−</span>
+      </button>
+      <span className="w-12 text-center text-[13px] text-text-1">
+        {value}{unit}
+      </span>
+      <button
+        className="icon-btn border border-border-app"
+        onClick={() => onChange(Math.min(max, value + step))}
+        title="增大"
+      >
+        <span className="px-1 text-[13px]">+</span>
+      </button>
+    </div>
+  );
+}
+
+const PRESETS_LIGHT = {
+  docBg: ["#f7f1e6", "#f4f4f4", "#ffffff", "#e8f0e8"],
+  floatBg: ["#ebe4d5", "#e8e8e8", "#f0f0f0", "#e0e8e0"],
+  edGutter: ["#a8a299", "#8b949e", "#6e7781", "#59636e"],
+  edMark: ["#a89e8a", "#8b949e", "#6e7781", "#59636e"],
+  edHeading: ["#4f5bd5", "#0969da", "#8250df", "#1a7f37"],
+  edCode: ["#b25e09", "#cf222e", "#953800", "#0550ae"],
+  edString: ["#0a7f4f", "#1a7f37", "#116329", "#8250df"],
+  edMatch: ["#ffd8a8", "#fff8c5", "#ffdfb6", "#ffebe9"],
+};
+
+const PRESETS_DARK = {
+  docBg: ["#232323", "#1b1b1b", "#2a2a2a", "#1e2a1e"],
+  floatBg: ["#1f1f1f", "#2c2c2c", "#353535", "#252d25"],
+  edGutter: ["#5f5f5f", "#8b949e", "#7d8590", "#a0a0a0"],
+  edMark: ["#6e6e6e", "#8b949e", "#7d8590", "#59636e"],
+  edHeading: ["#7ab7ff", "#79c0ff", "#d2a8ff", "#7ee787"],
+  edCode: ["#e5a06a", "#ff7b72", "#ffa657", "#79c0ff"],
+  edString: ["#7dd3a8", "#7ee787", "#56d364", "#a5d6ff"],
+  edMatch: ["#4a4020", "#5a4a1e", "#6b4a2a", "#3d3a1e"],
+};
+
 function AppearancePane() {
   const app = useApp();
+  const isDark = app.theme === "dark";
+  const P = isDark ? PRESETS_DARK : PRESETS_LIGHT;
+
+  // 按主题取当前色值
+  const pick = <K extends keyof typeof PRESETS_LIGHT>(key: K) =>
+    isDark ? app[`${key}Dark` as keyof typeof app] : app[`${key}Light` as keyof typeof app];
+  // 按主题写色值
+  const set = (key: string, v: string) =>
+    updateUi({ [isDark ? `${key}Dark` : `${key}Light`]: v });
+
+  // 各卡默认值（按主题取）
+  const resetGeneral = () =>
+    updateUi({ fontSize: 17, docWidth: "medium", codeWrap: true });
+  const resetSidebar = () =>
+    updateUi({ sidebarWidth: 240, tocWidth: 240 });
+  const resetDocColors = () =>
+    updateUi(
+      isDark
+        ? { docBgDark: "#232323", floatBgDark: "#1f1f1f" }
+        : { docBgLight: "#f7f1e6", floatBgLight: "#ebe4d5" },
+    );
+  const resetEditorColors = () =>
+    updateUi(
+      isDark
+        ? {
+            edGutterDark: "#5f5f5f",
+            edMarkDark: "#6e6e6e",
+            edHeadingDark: "#7ab7ff",
+            edCodeDark: "#e5a06a",
+            edStringDark: "#7dd3a8",
+            edMatchDark: "#4a4020",
+          }
+        : {
+            edGutterLight: "#a8a299",
+            edMarkLight: "#a89e8a",
+            edHeadingLight: "#4f5bd5",
+            edCodeLight: "#b25e09",
+            edStringLight: "#0a7f4f",
+            edMatchLight: "#ffd8a8",
+          },
+    );
+
   return (
     <div>
-      <PaneTitle title="外观" desc="主题与字号实时生效，并随会话自动保存。" />
-      <Card>
+      <PaneTitle title="外观" desc="主题与字号实时生效；颜色类按当前主题绑定，切主题自动切换。" />
+      {/* 通用 */}
+      <Card title="通用" onReset={resetGeneral}>
         <Row label="主题">
           <Segmented
             options={[
@@ -129,18 +274,131 @@ function AppearancePane() {
           />
         </Row>
         <Row label="正文字号">
-          <div className="flex items-center gap-2">
-            <button className="icon-btn border border-border-app" onClick={() => bumpFont(-1)} title="减小字号">
-              <span className="px-1 text-[13px]">A-</span>
-            </button>
-            <span className="w-10 text-center text-[13px] text-text-1">{app.fontSize}px</span>
-            <button className="icon-btn border border-border-app" onClick={() => bumpFont(1)} title="增大字号">
-              <span className="px-1 text-[13px]">A+</span>
-            </button>
-            <button className="px-2 text-[12px] text-text-3 hover:text-text-1" onClick={() => updateUi({ fontSize: 17 })}>
-              恢复默认
-            </button>
-          </div>
+          <Stepper
+            value={app.fontSize}
+            onChange={(v) => updateUi({ fontSize: v })}
+            min={14}
+            max={24}
+            unit="px"
+          />
+        </Row>
+        <Row label="阅读栏宽">
+          <Segmented
+            options={[
+              { value: "narrow", label: "窄" },
+              { value: "medium", label: "中" },
+              { value: "wide", label: "宽" },
+              { value: "full", label: "全宽" },
+            ]}
+            value={app.docWidth}
+            onChange={(v) => updateUi({ docWidth: v as DocWidth })}
+          />
+        </Row>
+        <Row label="代码块换行">
+          <Toggle on={app.codeWrap} onChange={(v) => updateUi({ codeWrap: v })} />
+        </Row>
+      </Card>
+
+      {/* 侧栏 */}
+      <Card title="侧栏" onReset={resetSidebar}>
+        <Row label="侧边栏宽度">
+          <Stepper
+            value={app.sidebarWidth}
+            onChange={(v) => updateUi({ sidebarWidth: v })}
+            min={180}
+            max={480}
+            step={20}
+            unit="px"
+          />
+        </Row>
+        <Row label="目录宽度">
+          <Stepper
+            value={app.tocWidth}
+            onChange={(v) => updateUi({ tocWidth: v })}
+            min={180}
+            max={480}
+            step={20}
+            unit="px"
+          />
+        </Row>
+      </Card>
+
+      {/* 阅读区颜色 */}
+      <Card title="阅读区" onReset={resetDocColors}>
+        <ColorRow
+          label="正文底色"
+          presets={P.docBg}
+          value={pick("docBg") as string}
+          onChange={(v) => set("docBg", v)}
+        />
+        <ColorRow
+          label="浮层底色"
+          presets={P.floatBg}
+          value={pick("floatBg") as string}
+          onChange={(v) => set("floatBg", v)}
+        />
+      </Card>
+
+      {/* 编辑器颜色 */}
+      <Card title="编辑器" onReset={resetEditorColors}>
+        <ColorRow
+          label="行号"
+          presets={isDark ? PRESETS_DARK.edGutter : PRESETS_LIGHT.edGutter}
+          value={pick("edGutter") as string}
+          onChange={(v) => set("edGutter", v)}
+        />
+        <ColorRow
+          label="标记符号（# * ` >）"
+          presets={P.edMark}
+          value={pick("edMark") as string}
+          onChange={(v) => set("edMark", v)}
+        />
+        <ColorRow
+          label="标题"
+          presets={P.edHeading}
+          value={pick("edHeading") as string}
+          onChange={(v) => set("edHeading", v)}
+        />
+        <ColorRow
+          label="代码"
+          presets={P.edCode}
+          value={pick("edCode") as string}
+          onChange={(v) => set("edCode", v)}
+        />
+        <ColorRow
+          label="字符串"
+          presets={P.edString}
+          value={pick("edString") as string}
+          onChange={(v) => set("edString", v)}
+        />
+        <ColorRow
+          label="搜索匹配"
+          presets={P.edMatch}
+          value={pick("edMatch") as string}
+          onChange={(v) => set("edMatch", v)}
+        />
+      </Card>
+
+      {/* 编辑器排版（不分主题） */}
+      <Card title="编辑器排版" onReset={() => updateUi({ edFontSize: 13, edLineHeight: 1.7 })}>
+        <Row label="字号">
+          <Stepper
+            value={app.edFontSize}
+            onChange={(v) => updateUi({ edFontSize: v })}
+            min={11}
+            max={20}
+            unit="px"
+          />
+        </Row>
+        <Row label="行高">
+          <Stepper
+            value={Math.round(app.edLineHeight * 10)}
+            onChange={(v) => updateUi({ edLineHeight: v / 10 })}
+            min={12}
+            max={24}
+            step={1}
+            unit=""
+          />
         </Row>
       </Card>
     </div>
@@ -217,8 +475,11 @@ function ShortcutsPane() {
         <div className="space-y-1.5 py-1 text-[13px] text-text-2">
           <KeyRow keys="Ctrl + O" desc="打开 Markdown 文件" />
           <KeyRow keys="Ctrl + Shift + O" desc="打开文件夹" />
-          <KeyRow keys="Ctrl + Shift + F" desc="打开 / 关闭全文搜索" />
+          <KeyRow keys="Ctrl + S" desc="保存当前文档" />
+          <KeyRow keys="Ctrl + Z / Ctrl + Y" desc="撤销 / 重做" />
+          <KeyRow keys="Ctrl + F / Ctrl + Shift + F" desc="打开 / 关闭全文搜索" />
           <KeyRow keys="Ctrl + = / Ctrl + -" desc="增大 / 减小字号" />
+          <KeyRow keys="Ctrl + 滚轮" desc="阅读区缩放字号" />
           <KeyRow keys="Ctrl + 0" desc="恢复默认字号" />
           <KeyRow keys="Esc" desc="关闭图片查看 / 搜索框" />
         </div>
@@ -230,6 +491,7 @@ function ShortcutsPane() {
 /* ---------------- 关于 ---------------- */
 
 function AboutPane() {
+  const app = useApp();
   return (
     <div>
       <PaneTitle title="关于" desc="FreeMarkdown —— 本地 Markdown 阅读器。" />
@@ -260,6 +522,14 @@ function AboutPane() {
           </div>
         </dl>
       </Card>
+      <Card title="开发者">
+        <Row label="诊断模式">
+          <Toggle on={app.diagnosticMode} onChange={(v) => updateUi({ diagnosticMode: v })} />
+        </Row>
+        <p className="pb-2 text-[12px] text-text-3">
+          打开后搜索面板显示调试信息（搜索范围/命中数/当前文档路径）。
+        </p>
+      </Card>
     </div>
   );
 }
@@ -285,10 +555,30 @@ function PaneTitle({ title, desc }: { title: string; desc: string }) {
   );
 }
 
-function Card({ title, children }: { title?: string; children: React.ReactNode }) {
+function Card({
+  title,
+  onReset,
+  children,
+}: {
+  title?: string;
+  onReset?: () => void;
+  children: React.ReactNode;
+}) {
   return (
     <section className="mt-4 rounded-lg border border-border-app bg-bg-elev px-4 py-1">
-      {title && <h2 className="pt-2 text-[13px] font-medium text-text-1">{title}</h2>}
+      {(title || onReset) && (
+        <div className="flex items-center justify-between pt-2">
+          {title && <h2 className="text-[13px] font-medium text-text-1">{title}</h2>}
+          {onReset && (
+            <button
+              className="text-[11px] text-text-3 hover:text-text-1"
+              onClick={onReset}
+            >
+              恢复默认
+            </button>
+          )}
+        </div>
+      )}
       {children}
     </section>
   );
@@ -312,12 +602,37 @@ function Segmented<T extends string>({
   value: T;
   onChange: (v: T) => void;
 }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null);
+
+  // 测量激活按钮的实际位置，指示器用 transform 滑动（GPU 合成）
+  useLayoutEffect(() => {
+    const el = containerRef.current?.querySelector(`[data-value="${value}"]`) as HTMLElement | null;
+    if (el) {
+      setIndicator({ left: el.offsetLeft, width: el.offsetWidth });
+    }
+  }, [value, options]);
+
   return (
-    <div className="flex rounded-md border border-border-app p-0.5">
+    <div ref={containerRef} className="relative flex rounded-md border border-border-app p-0.5">
+      {/* 滑动指示器：GPU transform，不触发 layout */}
+      {indicator && (
+        <span
+          className="absolute top-0.5 bottom-0.5 rounded-md bg-accent-soft"
+          style={{
+            width: indicator.width,
+            transform: `translateX(${indicator.left}px)`,
+            transition: "transform 200ms cubic-bezier(0.4, 0, 0.2, 1)",
+          }}
+        />
+      )}
       {options.map((o) => (
         <button
           key={o.value}
-          className={`rounded px-3 py-1 text-[12px] ${o.value === value ? "bg-accent-soft font-medium text-accent" : "text-text-2 hover:text-text-1"}`}
+          data-value={o.value}
+          className={`relative z-10 rounded px-3 py-1 text-[12px] transition-colors ${
+            o.value === value ? "font-medium text-accent" : "text-text-2 hover:text-text-1"
+          }`}
           onClick={() => onChange(o.value)}
         >
           {o.label}
@@ -337,8 +652,13 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
       style={{ height: 22, width: 40 }}
     >
       <span
-        className="absolute top-[3px] h-4 w-4 rounded-full bg-white shadow transition-all"
-        style={{ left: on ? 22 : 3 }}
+        className="absolute top-[3px] h-4 w-4 rounded-full shadow"
+        style={{
+          background: "var(--switch-thumb)",
+          transform: `translateX(${on ? 19 : 0}px)`,
+          transition: "transform 200ms cubic-bezier(0.4, 0, 0.2, 1)",
+          left: 3,
+        }}
       />
     </button>
   );

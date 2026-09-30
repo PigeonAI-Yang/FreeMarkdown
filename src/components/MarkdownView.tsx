@@ -8,6 +8,8 @@ import React, {
 import type { DocPayload } from "../lib/ipc";
 import { api } from "../lib/ipc";
 import {
+  appStore,
+  actions,
   consumePendingJump,
   jumpRegistry,
   onDocSaved,
@@ -16,7 +18,7 @@ import {
   setDocInfo,
   setToc,
 } from "../lib/store";
-import { enhanceChunk } from "../lib/enhance";
+import { enhanceChunk, handleCodeBlockClick } from "../lib/enhance";
 import { useFileWatch } from "../lib/watch";
 import { Lightbox } from "./Lightbox";
 
@@ -34,9 +36,10 @@ const docCache = new Map<string, DocPayload>();
 
 interface MdViewProps {
   path: string;
+  panelId: string;
 }
 
-export function MarkdownView({ path }: MdViewProps) {
+export function MarkdownView({ path, panelId }: MdViewProps) {
   const [doc, setDoc] = useState<DocPayload | null>(() => docCache.get(path) ?? null);
   const [error, setError] = useState<string | null>(null);
   const [reloadSeq, setReloadSeq] = useState(0);
@@ -46,6 +49,19 @@ export function MarkdownView({ path }: MdViewProps) {
     null,
   );
   const bigDoc = !!doc && doc.size > BIG_DOC_BYTES;
+
+  useEffect(() => {
+    const refresh = () => {
+      docCache.delete(path);
+      setReloadSeq((n) => n + 1);
+    };
+    actions.refreshPanel[panelId] = refresh;
+    return () => {
+      if (actions.refreshPanel[panelId] === refresh) {
+        delete actions.refreshPanel[panelId];
+      }
+    };
+  }, [path, panelId]);
 
   /* ------- 编辑面板保存广播：同路径阅读面板按新 mtime 重读（LRU 自然失效） ------- */
   useEffect(() => {
@@ -150,10 +166,16 @@ export function MarkdownView({ path }: MdViewProps) {
 
   useEffect(() => () => flushScrollWork(), []);
 
-  /* ------- 点击委托：md 内链 / 外链 / 锚点 / 图片缩放 ------- */
+
+  /* ------- 点击委托：md 内链 / 外链 / 锚点 / 图片缩放 / 代码块复制 / 清除搜索高亮 ------- */
   const onClick = useCallback(
     (e: React.MouseEvent) => {
       const target = e.target as HTMLElement;
+      if (handleCodeBlockClick(target)) return;
+      // 点任意处清除上次搜索跳转残留的淡底高亮（不动 .search-flash，动画播完自然消失）
+      contentRef.current
+        ?.querySelectorAll(".search-hit")
+        .forEach((n) => n.classList.remove("search-hit"));
       const anchor = target.closest("a");
       if (anchor) {
         e.preventDefault();
@@ -474,22 +496,27 @@ function countSourceLines(chunkHtml: string): number {
 
 /** 高亮闪烁并居中显示；同时挂常驻淡底标记直到下次跳转 */
 function flashAndCenter(scroller: HTMLDivElement, el: HTMLElement) {
-  const top =
-    el.getBoundingClientRect().top -
-    scroller.getBoundingClientRect().top +
-    scroller.scrollTop -
-    scroller.clientHeight / 2 +
-    el.offsetHeight / 2;
-  scroller.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
-  const content = el.closest(".doc-content");
-  content?.querySelectorAll(".search-hit").forEach((n) => {
-    n.classList.remove("search-hit");
-    n.classList.remove("search-flash");
+  // content-visibility:auto 的元素在未进入视口前 getBoundingClientRect 全为 0，
+  // 先 scrollIntoView 强制渲染，再在下一帧算精确位置居中。
+  el.scrollIntoView({ block: "center", behavior: "instant" });
+  requestAnimationFrame(() => {
+    const top =
+      el.getBoundingClientRect().top -
+      scroller.getBoundingClientRect().top +
+      scroller.scrollTop -
+      scroller.clientHeight / 2 +
+      el.offsetHeight / 2;
+    scroller.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    const content = el.closest(".doc-content");
+    content?.querySelectorAll(".search-hit").forEach((n) => {
+      n.classList.remove("search-hit");
+      n.classList.remove("search-flash");
+    });
+    el.classList.remove("search-flash");
+    void el.offsetWidth;
+    el.classList.add("search-hit");
+    el.classList.add("search-flash");
   });
-  el.classList.remove("search-flash");
-  void el.offsetWidth;
-  el.classList.add("search-hit");
-  el.classList.add("search-flash");
 }
 
 /** 跳转锚点：元素未挂载时按 chunk 定位再精确校正 */
@@ -514,10 +541,14 @@ function jumpToAnchor(path: string, anchor: string) {
   }, 240);
 }
 
-/** 搜索跳转：按源码行精确定位并闪烁高亮对应块 */
-function jumpToText(path: string, text: string, line?: number) {
+/** 搜索跳转：按源码行精确定位并闪烁高亮对应块；重试上限防止文档未挂载完时死循环 */
+function jumpToText(path: string, text: string, line?: number, attempt = 0) {
   const { scroller, content } = findDocSurfaces(path);
-  if (!scroller || !content) return;
+  if (!scroller || !content) {
+    // 文档视图还没挂载好（openFile 后 DOM 尚未注入），稍后重试
+    if (attempt < 20) setTimeout(() => jumpToText(path, text, line, attempt + 1), 120);
+    return;
+  }
   if (line && line > 0) {
     const byLine = findBlockAtLine(content, line);
     if (byLine) {
@@ -534,14 +565,17 @@ function jumpToText(path: string, text: string, line?: number) {
         total += Math.max(80, chunks[i].length * ESTIMATE_PX_PER_BYTE);
         if (saw >= line) {
           scroller.scrollTo({ top: Math.max(0, total / 2 - scroller.clientHeight / 2), behavior: "smooth" });
-          setTimeout(() => jumpToText(path, text, line), 260);
+          if (attempt < 20) setTimeout(() => jumpToText(path, text, line, attempt + 1), 260);
           return;
         }
       }
     }
   }
-  // 兜底：按文本片段模糊匹配
-  const needle = text.replace(/^[…]+/, "").trim();
+  // 兜底：按文本片段模糊匹配；snippet 首尾可能有 … 截断符，剥掉后再匹配
+  const needle = text
+    .replace(/^[…\s]+/, "")
+    .replace(/[…\s]+$/, "")
+    .trim();
   if (needle.length < 4) return;
   const candidates = content.querySelectorAll<HTMLElement>(
     "p, li, h1, h2, h3, h4, h5, h6, td, th, pre, blockquote, dd, dt",
@@ -561,5 +595,5 @@ function jumpToText(path: string, text: string, line?: number) {
   for (let i = 0; i < idx; i++)
     y += Math.max(80, chunks[i].length * ESTIMATE_PX_PER_BYTE);
   scroller.scrollTo({ top: Math.max(0, y - 24) });
-  setTimeout(() => jumpToText(path, text, line), 260);
+  if (attempt < 20) setTimeout(() => jumpToText(path, text, line, attempt + 1), 260);
 }

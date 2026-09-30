@@ -91,29 +91,40 @@ fn find_in_line(lower_line: &str, needle: &str) -> Option<(usize, u32)> {
     first.map(|p| (p, count))
 }
 
-/// 截取首个匹配位置前后约 40 字符的片段（按字符边界）
+/// 截取首个匹配位置前后片段（按字符边界）；往前取 24 字符保留上下文（书名号等前缀），
+/// 往后取 80 字符覆盖匹配本身 + 后缀。
 fn make_snippet(line: &str, byte_pos: usize) -> String {
-    let mut start = 0usize;
-    let mut chars_before = 0usize;
+    // 往前取 24 个字符作为前缀：环形缓冲保留 byte_pos 前最后 24 个字符边界。
+    const PREFIX_CHARS: usize = 24;
+    let mut bounds = [0usize; PREFIX_CHARS];
+    let mut idx = 0usize;
     for (i, _) in line.char_indices() {
-        if i >= byte_pos || chars_before >= 40 {
+        if i >= byte_pos {
             break;
         }
-        start = i;
-        chars_before += 1;
+        bounds[idx % PREFIX_CHARS] = i;
+        idx += 1;
     }
+    // 若 byte_pos 前字符数 < PREFIX_CHARS，start=0；否则取缓冲里最早的那个
+    let start = if idx < PREFIX_CHARS {
+        0
+    } else {
+        bounds[idx % PREFIX_CHARS]
+    };
+
     let mut out = String::new();
-    if start > 0 || chars_before >= 40 {
+    if start > 0 {
         out.push('…');
     }
+    // 从 start 开始取 80 个字符
     let mut taken = 0usize;
     for ch in line[start..].chars() {
-        if taken >= 110 {
+        if taken >= 80 {
             out.push('…');
             break;
         }
         out.push(ch);
-        taken += ch.len_utf8();
+        taken += 1;
     }
     out
 }

@@ -4,8 +4,15 @@
 :root,
 :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #f7f8fa;
+  /* 层次策略：外壳纯白（干净的框），正文米黄（纸感内容），浮层更深一档暖色。
+     三个区从冷到暖、从亮到沉，肉眼直接分出层。 */
+  --bg: #ffffff;
+  /* 全局面板底色（设置页卡片/编辑面板边框等）：纯白 */
   --bg-elev: #ffffff;
+  /* 阅读区底色（用户可调），默认米黄 */
+  --doc-bg: #f7f1e6;
+  /* 阅读区缩放（滚轮委托写入，1 = 100%；zoom 是 GPU 合成本不触发 layout） */
+  --doc-zoom: 1;
   --bg-hover: #eceef1;
   --bg-active: #e3e6ea;
   --border: #d9dde3;
@@ -15,18 +22,43 @@
   --text-3: #8b949e;
   --accent: #4f5bd5;
   --accent-soft: #e8eafc;
+  /* 编辑器字号/行高默认值（用户可调，不分主题） */
+  --ed-font-size: 13px;
+  --ed-line-height: 1.7;
+  /* 开关圆点：浅色主题用纯白（在 accent 紫上能看清） */
+  --switch-thumb: #ffffff;
   --selection: #b3c7f766;
-  --shadow: 0 8px 24px rgba(28, 33, 40, 0.12);
+  /* 浮层面板投影加重一档，配合降亮的正文才看得出来 */
+  --shadow: 0 10px 32px rgba(28, 33, 40, 0.18);
   --scrollbar: #c9ced6;
   /* 卡片预览舞台点阵：浅色主题 = 淡底 + 稍深的点 */
   --stage-bg: #eceef2;
   --stage-dot: #d2d7df;
+  /* 浮层侧栏底色：比正文深一档暖色，浮起时自然分层 */
+  --float-bg: #ebe4d5;
+  /* 编辑面板（CodeMirror）浅色：跟随阅读底色，gutter 略深 */
+  --ed-bg: var(--doc-bg);
+  /* gutter / 当前行 / 匹配色：都跟随 --doc-bg 自动派生，用户改底色时不用逐个调 */
+  --ed-gutter-bg: color-mix(in srgb, var(--doc-bg) 94%, #000);
+  --ed-gutter-fg: #a8a299;
+  --ed-active-line: color-mix(in srgb, var(--doc-bg) 90%, #000);
+  --ed-caret: #1c2128;
+  /* 标记符号（# * ` > 等）：比正文弱但可见，米黄底上不能再淡 */
+  --ed-mark: #a89e8a;
+  --ed-heading: #4f5bd5;
+  --ed-code: #b25e09;
+  --ed-string: #0a7f4f;
+  /* 搜索匹配：淡橙，和米黄底拉开对比 */
+  --ed-match: #ffd8a8;
+  --ed-match-sel: #ffbe6e;
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
   --bg: #1b1b1b;
   --bg-elev: #232323;
+  /* 阅读区底色（深色主题默认） */
+  --doc-bg: #232323;
   --bg-hover: #2c2c2c;
   --bg-active: #353535;
   --border: #383838;
@@ -36,17 +68,19 @@
   --text-3: #6e6e6e;
   --accent: #e8e8e8;
   --accent-soft: #353535;
+  /* 开关圆点：深色主题用深色（在 accent 白轨道上能看清） */
+  --switch-thumb: #1b1b1b;
   --selection: #3b3b3b;
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   --scrollbar: #434343;
   /* 卡片预览舞台点阵：深色主题 = 深底 + 稍亮的点 */
   --stage-bg: #141414;
   --stage-dot: #3a3a3a;
-  /* 编辑面板（CodeMirror）配色 */
-  --ed-bg: #1b1b1b;
-  --ed-gutter-bg: #202020;
+  /* 编辑面板（CodeMirror）配色：跟随阅读底色 */
+  --ed-bg: var(--doc-bg);
+  --ed-gutter-bg: color-mix(in srgb, var(--doc-bg) 94%, #fff);
   --ed-gutter-fg: #5f5f5f;
-  --ed-active-line: #242424;
+  --ed-active-line: color-mix(in srgb, var(--doc-bg) 90%, #fff);
   --ed-caret: #e8e8e8;
   --ed-mark: #6e6e6e;
   --ed-heading: #7ab7ff;
@@ -54,6 +88,8 @@
   --ed-string: #7dd3a8;
   --ed-match: #4a4020;
   --ed-match-sel: #6b5a22;
+  /* 浮层侧栏底色：比正文略深一点，浮起时拉开层次 */
+  --float-bg: #1f1f1f;
 }
 
 @theme inline {
@@ -138,14 +174,26 @@ body {
   flex: none;
 }
 
+/* ---------- 无边框窗口控制 ---------- */
+.win-ctrl {
+  height: 26px;
+  min-width: 32px;
+}
+.win-close:hover {
+  background: #e81123;
+  color: #fff;
+}
+
 /* ---------- dockview 主题适配（主题类经 className prop 挂在库根节点上） ---------- */
 .doc-host .dockview-theme-light,
 .doc-host .dockview-theme-dark {
-  --dv-group-view-background-color: var(--bg-elev);
+  /* 组容器（含标签栏空隙）走外壳色；内容区单独用 --bg-elev */
+  --dv-group-view-background-color: var(--bg);
   --dv-tabs-and-actions-container-background-color: var(--bg);
-  --dv-activegroup-visiblepanel-tab-background-color: var(--bg-elev);
+  /* 标签页全归外壳纯白；内容区才是米黄 */
+  --dv-activegroup-visiblepanel-tab-background-color: var(--bg);
   --dv-activegroup-hiddenpanel-tab-background-color: var(--bg);
-  --dv-inactivegroup-visiblepanel-tab-background-color: var(--bg-elev);
+  --dv-inactivegroup-visiblepanel-tab-background-color: var(--bg);
   --dv-inactivegroup-hiddenpanel-tab-background-color: var(--bg);
   --dv-activegroup-visiblepanel-tab-color: var(--text-1);
   --dv-activegroup-hiddenpanel-tab-color: var(--text-2);
@@ -164,9 +212,45 @@ body {
   --dv-tab-margin: 0;
 }
 
-/* 活动标签下划线指示 */
-.doc-host .dv-tab.dv-active-tab {
-  box-shadow: inset 0 -2px 0 var(--accent);
+/* 活动标签下划线指示：::after 伪元素 + scaleX 展开，GPU 合成 */
+.doc-host .dv-tab {
+  position: relative;
+  transition: background-color 150ms ease-out;
+}
+/* 关闭动画：宽度收缩 + 淡出，200ms 后 dockview 真正删 DOM */
+.doc-host .dv-default-tab.closing {
+  flex-shrink: 0;
+  width: 0 !important;
+  max-width: 0 !important;
+  min-width: 0 !important;
+  opacity: 0;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  overflow: hidden;
+  transition: width 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 150ms ease-out, padding 200ms ease-out;
+}
+.doc-host .dv-tab::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.doc-host .dv-tab.dv-active-tab::after {
+  transform: scaleX(1);
+}
+
+/* 内容区：米黄纸感（标签栏与工具栏保持纯白外壳） */
+.doc-host .dv-groupview > .dv-content-container {
+  background: var(--doc-bg);
 }
 
 /* 空态（水印）背景 */

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { SerializedDockview } from "dockview";
 import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
 import { api } from "./lib/ipc";
@@ -15,6 +15,7 @@ import {
   type EditMode,
 } from "./lib/store";
 import { loadSession, saveSessionNow, sessionMarkDirty } from "./lib/session";
+import type { DocWidth } from "./lib/store";
 import { DockHost } from "./components/DockHost";
 import { Sidebar } from "./components/Sidebar";
 import { TocPanel } from "./components/TocPanel";
@@ -24,12 +25,21 @@ import { ContextMenu } from "./components/ContextMenu";
 import { restoreCardSettings } from "./card/cardStore";
 import { useFileOpenBridge } from "./lib/filedrop";
 
+const DOC_WIDTH_VALUE: Record<DocWidth, string> = {
+  narrow: "60ch",
+  medium: "72ch",
+  wide: "88ch",
+  full: "none",
+};
+
 export default function App() {
   return (
     <>
       <AppShell />
       {/* 全局右键菜单：挂在根部，启动页/设置页分支外也生效 */}
       <ContextMenu />
+      {/* 无边框边缘拉伸热区：上/下/左/右 4 边 + 4 角（角落同时处理两方向） */}
+      <WindowResizeZones />
     </>
   );
 }
@@ -47,10 +57,33 @@ function AppShell() {
       appStore.set({
         theme: session.theme,
         fontSize: session.fontSize,
+        docWidth: session.docWidth ?? "medium",
+        codeWrap: session.codeWrap ?? true,
+        docBgLight: session.docBgLight ?? "#f7f1e6",
+        docBgDark: session.docBgDark ?? "#232323",
+        floatBgLight: session.floatBgLight ?? "#ebe4d5",
+        floatBgDark: session.floatBgDark ?? "#1f1f1f",
+        edMarkLight: session.edMarkLight ?? "#a89e8a",
+        edMarkDark: session.edMarkDark ?? "#6e6e6e",
+        edHeadingLight: session.edHeadingLight ?? "#4f5bd5",
+        edHeadingDark: session.edHeadingDark ?? "#7ab7ff",
+        edCodeLight: session.edCodeLight ?? "#b25e09",
+        edCodeDark: session.edCodeDark ?? "#e5a06a",
+        edStringLight: session.edStringLight ?? "#0a7f4f",
+        edStringDark: session.edStringDark ?? "#7dd3a8",
+        edMatchLight: session.edMatchLight ?? "#ffd8a8",
+        edMatchDark: session.edMatchDark ?? "#4a4020",
+        edGutterLight: session.edGutterLight ?? "#a8a299",
+        edGutterDark: session.edGutterDark ?? "#5f5f5f",
+        edFontSize: session.edFontSize ?? 13,
+        edLineHeight: session.edLineHeight ?? 1.7,
+        diagnosticMode: session.diagnosticMode ?? false,
         recentFiles: session.recentFiles,
         recentFolders: session.recentFolders,
         sidebarVisible: session.sidebarVisible,
         tocVisible: session.tocVisible,
+        sidebarWidth: session.sidebarWidth ?? 240,
+        tocWidth: session.tocWidth ?? 240,
         rootFolder: session.rootFolder,
         searchRoot: session.searchRoot ?? null,
         editMode: session.editMode ?? "split",
@@ -83,6 +116,45 @@ function AppShell() {
   useEffect(() => {
     document.documentElement.style.setProperty("--doc-font-size", `${app.fontSize}px`);
   }, [app.fontSize]);
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--doc-max-width",
+      DOC_WIDTH_VALUE[app.docWidth],
+    );
+  }, [app.docWidth]);
+  useEffect(() => {
+    document.documentElement.dataset.codeWrap = app.codeWrap ? "wrap" : "scroll";
+    // 已渲染的块同步跟随总开关（新块在 wrapCodeBlock 里读 dataset 初始化）
+    document
+      .querySelectorAll(".code-block")
+      .forEach((el) => el.classList.toggle("wrapped", app.codeWrap));
+  }, [app.codeWrap]);
+  // 按主题写所有可调色值：当前主题下改的就是当前主题的
+  useEffect(() => {
+    const root = document.documentElement;
+    const isDark = app.theme === "dark";
+    root.style.setProperty("--doc-bg", isDark ? app.docBgDark : app.docBgLight);
+    root.style.setProperty("--float-bg", isDark ? app.floatBgDark : app.floatBgLight);
+    root.style.setProperty("--ed-mark", isDark ? app.edMarkDark : app.edMarkLight);
+    root.style.setProperty("--ed-heading", isDark ? app.edHeadingDark : app.edHeadingLight);
+    root.style.setProperty("--ed-code", isDark ? app.edCodeDark : app.edCodeLight);
+    root.style.setProperty("--ed-string", isDark ? app.edStringDark : app.edStringLight);
+    root.style.setProperty("--ed-match", isDark ? app.edMatchDark : app.edMatchLight);
+    root.style.setProperty("--ed-gutter-fg", isDark ? app.edGutterDark : app.edGutterLight);
+    root.style.setProperty("--ed-font-size", `${app.edFontSize}px`);
+    root.style.setProperty("--ed-line-height", String(app.edLineHeight));
+  }, [
+    app.theme,
+    app.docBgLight, app.docBgDark,
+    app.floatBgLight, app.floatBgDark,
+    app.edMarkLight, app.edMarkDark,
+    app.edHeadingLight, app.edHeadingDark,
+    app.edCodeLight, app.edCodeDark,
+    app.edStringLight, app.edStringDark,
+    app.edMatchLight, app.edMatchDark,
+    app.edGutterLight, app.edGutterDark,
+    app.edFontSize, app.edLineHeight,
+  ]);
 
   /* ---------- 全局动作注册（水印/侧边栏使用） ---------- */
   useEffect(() => {
@@ -162,12 +234,87 @@ function AppShell() {
     return () => cancelAnimationFrame(raf);
   }, [app.booted]);
 
-  /* ---------- 快捷键 ---------- */
+  /* ---------- Ctrl/⌘ + 滚轮缩放（全局委托，挂 window 不依赖 ref） ---------- */
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let raf = 0;
+    let pendingZoom: number | null = null;
+    const flush = () => {
+      raf = 0;
+      if (pendingZoom == null) return;
+      document.documentElement.style.setProperty(
+        "--doc-zoom",
+        String(pendingZoom),
+      );
+      pendingZoom = null;
+    };
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      const t = e.target as HTMLElement;
+      // 编辑器内改 --ed-font-size（CM 布局自己算字号，zoom 会让光标位置偏）
+      if (t.closest(".edit-editor")) {
+        const cur =
+          parseFloat(
+            getComputedStyle(document.documentElement).getPropertyValue(
+              "--ed-font-size",
+            ),
+          ) || 13;
+        const next = Math.min(24, Math.max(10, cur + (e.deltaY < 0 ? 1 : -1)));
+        document.documentElement.style.setProperty(
+          "--ed-font-size",
+          `${next}px`,
+        );
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => {
+          appStore.set({ edFontSize: next });
+          void import("./lib/session").then(({ sessionMarkDirty }) =>
+            sessionMarkDirty(),
+          );
+          timer = null;
+        }, 300);
+        return;
+      }
+      // 其余区域（阅读区/卡片预览）统一改 --doc-zoom：GPU 合成本不触发 layout
+      const cur =
+        parseFloat(
+          getComputedStyle(document.documentElement).getPropertyValue(
+            "--doc-zoom",
+          ),
+        ) || 1;
+      const next = Math.min(3, Math.max(0.5, cur * (e.deltaY < 0 ? 1.1 : 1 / 1.1)));
+      pendingZoom = next;
+      if (!raf) raf = requestAnimationFrame(flush);
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        // 缩放比例不回写字号（zoom 是视觉缩放，字号记录保持原值）
+        timer = null;
+      }, 300);
+    };
+    window.addEventListener("wheel", onWheel, { passive: false });
+    return () => {
+      window.removeEventListener("wheel", onWheel);
+      if (timer) clearTimeout(timer);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  /* ---------- 快捷键（含浏览器快捷键屏蔽） ---------- */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const ctrl = e.ctrlKey || e.metaKey;
-      if (!ctrl) return;
       const k = e.key.toLowerCase();
+      if (e.key === "F5") {
+        e.preventDefault();
+        actions.refreshActive();
+        return;
+      }
+      if (!ctrl) {
+        // 非 Ctrl 键：屏蔽 F12 DevTools
+        if (e.key === "F12") e.preventDefault();
+        return;
+      }
+      // 我们支持的快捷键：先处理，再阻止默认
       if (k === "o" && e.shiftKey) {
         e.preventDefault();
         actions.pickFolder();
@@ -177,14 +324,28 @@ function AppShell() {
       } else if (k === "f" && e.shiftKey) {
         e.preventDefault();
         appStore.set({ searchOpen: !appStore.get().searchOpen });
+      } else if (k === "f") {
+        // Ctrl+F → 切换全文搜索（屏蔽浏览器查找）
+        e.preventDefault();
+        appStore.set({ searchOpen: !appStore.get().searchOpen });
+      } else if (k === "s") {
+        // Ctrl+S → 保存当前文档（编辑器内 CM6 已绑，这里兜底全局）
+        e.preventDefault();
+        actions.saveActive();
+      } else if (k === "z" && !e.shiftKey) {
+        // Ctrl+Z → 撤销（编辑器内 CM6 已绑，编辑器外走 active undo）
+        e.preventDefault();
+        actions.undoActive();
+      } else if (k === "y" || (k === "z" && e.shiftKey)) {
+        // Ctrl+Y / Ctrl+Shift+Z → 重做
+        e.preventDefault();
+        actions.redoActive();
       } else if (k === "e" && e.shiftKey) {
         e.preventDefault();
-        // 对活动文档打开编辑面板（源码 + 分栏预览）
         const p = appStore.get().activePanelPath;
         if (p) openEditPanel(p);
       } else if (k === "e") {
         e.preventDefault();
-        // 对活动文档打开卡片导出面板
         const p = appStore.get().activePanelPath;
         if (p) openCardPanel(p);
       } else if (k === "=" || k === "+") {
@@ -196,6 +357,11 @@ function AppShell() {
       } else if (k === "0") {
         e.preventDefault();
         updateUi({ fontSize: 17 });
+      } else {
+        // 屏蔽浏览器默认快捷键（打印/保存/查看源码/历史/下载/书签/地址栏），
+        // 放行编辑类（Ctrl+C/V/X/Z/Y/A/B/I）与标签操作（Ctrl+W/Tab/G 查找下一个）。
+        const BROWSER_KEYS = new Set(["p", "u", "h", "j", "d", "k", "l", "n", "t", "r"]);
+        if (BROWSER_KEYS.has(k)) e.preventDefault();
       }
     };
     window.addEventListener("keydown", onKey);
@@ -270,7 +436,16 @@ function ToolBar() {
     : undefined;
 
   return (
-    <header className="flex h-11 flex-none items-center gap-1 border-b border-border-app bg-bg px-2.5">
+    <header
+      className="flex h-11 flex-none items-center gap-1 border-b border-border-app bg-bg px-2.5"
+      data-tauri-drag-region
+      onDoubleClick={(e) => {
+        // 双击空白区切换最大化；点在按钮上不动
+        if ((e.target as HTMLElement).closest("button, a, input, select, [role='button']"))
+          return;
+        void getCurrentWindow().toggleMaximize();
+      }}
+    >
       <button
         className={`icon-btn ${app.sidebarVisible ? "active" : ""}`}
         onClick={() => updateUi({ sidebarVisible: !app.sidebarVisible })}
@@ -362,7 +537,14 @@ function ToolBar() {
       <button className="icon-btn" onClick={() => bumpFont(-1)} title="减小字号 (Ctrl+-)">
         <span className="px-0.5 text-[13px]">A-</span>
       </button>
-      <span className="w-7 text-center text-[11px] text-text-3">{app.fontSize}</span>
+      <button
+        className="icon-btn text-[11px]"
+        onClick={() => updateUi({ fontSize: 17 })}
+        title="恢复默认字号 (Ctrl+0)"
+        disabled={app.fontSize === 17}
+      >
+        {app.fontSize}
+      </button>
       <button className="icon-btn" onClick={() => bumpFont(1)} title="增大字号 (Ctrl+=)">
         <span className="px-0.5 text-[13px]">A+</span>
       </button>
@@ -377,6 +559,28 @@ function ToolBar() {
       <div className="ml-auto flex items-center gap-1">
         {editStatus && (
           <span className="mr-1 flex items-center gap-1.5">
+            <button
+              className="icon-btn"
+              onClick={() => actions.undoActive()}
+              title="撤销 (Ctrl+Z)"
+            >
+              <IconUndo />
+            </button>
+            <button
+              className="icon-btn"
+              onClick={() => actions.redoActive()}
+              title="重做 (Ctrl+Y)"
+            >
+              <IconRedo />
+            </button>
+            <button
+              className="icon-btn"
+              onClick={() => actions.saveActive()}
+              title="保存 (Ctrl+S)"
+              disabled={!editStatus.dirty && !editStatus.saving}
+            >
+              <IconSave />
+            </button>
             <span
               className={`tb-status ${editStatus.dirty ? "is-dirty" : ""}`}
               data-save-state={
@@ -410,6 +614,31 @@ function ToolBar() {
           title="设置"
         >
           <IconGear />
+        </button>
+
+        <div className="mx-1 h-5 w-px bg-border-app" />
+
+        {/* 无边框窗口控制：最小化 / 最大化 / 关闭 */}
+        <button
+          className="icon-btn win-ctrl"
+          onClick={() => void getCurrentWindow().minimize()}
+          title="最小化"
+        >
+          <IconMin />
+        </button>
+        <button
+          className="icon-btn win-ctrl"
+          onClick={() => void getCurrentWindow().toggleMaximize()}
+          title="最大化 / 还原"
+        >
+          <IconMax />
+        </button>
+        <button
+          className="icon-btn win-ctrl win-close"
+          onClick={() => void getCurrentWindow().close()}
+          title="关闭"
+        >
+          <IconClose />
         </button>
       </div>
     </header>
@@ -496,5 +725,103 @@ function IconGear() {
       <circle cx="12" cy="12" r="3" />
       <path d="M19.4 15a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.7 1.7 0 00-1.87-.34 1.7 1.7 0 00-1.04 1.56V21a2 2 0 11-4 0v-.09a1.7 1.7 0 00-1.04-1.56 1.7 1.7 0 00-1.87.34l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-1.56-1.04H3a2 2 0 110-4h.09A1.7 1.7 0 004.6 8.9a1.7 1.7 0 00-.34-1.87l-.06-.06a2 2 0 112.83-2.83l.06.06a1.7 1.7 0 001.87.34h.09A1.7 1.7 0 009.1 3.09V3a2 2 0 114 0v.09c0 .68.4 1.3 1.04 1.56.6.25 1.3.1 1.87-.34l.06-.06a2 2 0 112.83 2.83l-.06.06a1.7 1.7 0 00-.34 1.87v.09c.25.6.88 1.04 1.56 1.04H21a2 2 0 110 4h-.09c-.68 0-1.3.4-1.51 1.04z" strokeLinejoin="round" />
     </svg>
+  );
+}
+function IconMin() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M5 12h14" strokeLinecap="round" />
+    </svg>
+  );
+}
+function IconMax() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <rect x="5" y="5" width="14" height="14" rx="1.5" />
+    </svg>
+  );
+}
+function IconClose() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
+    </svg>
+  );
+}
+function IconSave() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" strokeLinejoin="round" />
+      <path d="M17 21v-8H7v8" strokeLinejoin="round" />
+      <path d="M7 3v5h8" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function IconUndo() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M3 7v6h6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function IconRedo() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M21 7v6h-6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/* ---------- 无边框窗口边缘拉伸热区 ---------- */
+type ResizeDir =
+  | "East"
+  | "North"
+  | "NorthEast"
+  | "NorthWest"
+  | "South"
+  | "SouthEast"
+  | "SouthWest"
+  | "West";
+
+function WindowResizeZones() {
+  const zone = (dir: ResizeDir, style: CSSProperties) => (
+    <div
+      key={dir}
+      style={{
+        position: "fixed",
+        zIndex: 9998,
+        // 命中区域（仅左键按下触发 resize，避免拦截右键/拖拽事件）
+        cursor: dir.toLowerCase().includes("east")
+          ? dir.toLowerCase().includes("west")
+            ? "nwse-resize"
+            : "nesw-resize"
+          : dir.toLowerCase().includes("west")
+            ? "nesw-resize"
+            : dir === "North" || dir === "South"
+              ? "ns-resize"
+              : "ew-resize",
+        ...style,
+      }}
+      onMouseDown={(e) => {
+        if (e.button !== 0) return;
+        void getCurrentWindow().startResizeDragging(dir);
+      }}
+    />
+  );
+  const T = 6; // 边缘热区厚度
+  const C = 12; // 角落热区边长
+  return (
+    <>
+      {zone("North", { top: 0, left: C, right: C, height: T })}
+      {zone("South", { bottom: 0, left: C, right: C, height: T })}
+      {zone("West", { left: 0, top: C, bottom: C, width: T })}
+      {zone("East", { right: 0, top: C, bottom: C, width: T })}
+      {zone("NorthWest", { top: 0, left: 0, width: C, height: C })}
+      {zone("NorthEast", { top: 0, right: 0, width: C, height: C })}
+      {zone("SouthWest", { bottom: 0, left: 0, width: C, height: C })}
+      {zone("SouthEast", { bottom: 0, right: 0, width: C, height: C })}
+    </>
   );
 }
