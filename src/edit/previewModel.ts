@@ -180,7 +180,10 @@ export function planEdit(
   const hi = Math.min(blocks.length - 1, k2 + 1);
 
   const sliceStart = oldIdx.lineStart(blocks[lo].startLine);
-  const endRaw = oldIdx.lineEnd(blocks[hi].endLine) + (newText.length - oldText.length);
+  const endRaw =
+    hi === blocks.length - 1
+      ? newText.length
+      : oldIdx.lineEnd(blocks[hi].endLine) + (newText.length - oldText.length);
   const sliceEnd = Math.min(newText.length, Math.max(sliceStart, endRaw));
   const sliceStartLine = newIdx.lineOf(sliceStart);
   const sliceEndLine = newIdx.lineOf(sliceEnd);

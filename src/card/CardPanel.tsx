@@ -810,7 +810,7 @@ export function CardPanel(props: IDockviewPanelProps<{ path: string }>) {
               </>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
             {busy && <span className="text-[12px] text-text-3">{progress}</span>}
             {status && (
               <span className="card-status" title={status}>
@@ -818,14 +818,14 @@ export function CardPanel(props: IDockviewPanelProps<{ path: string }>) {
               </span>
             )}
             <button
-              className="icon-btn border border-border-app px-3 text-[12px]"
+              className="icon-btn shrink-0 border border-border-app px-3 text-[12px]"
               disabled={busy || phase !== "ready"}
               onClick={() => void doExport("save")}
             >
               保存
             </button>
             <button
-              className="icon-btn border border-border-app px-3 text-[12px]"
+              className="icon-btn shrink-0 border border-border-app px-3 text-[12px]"
               disabled={busy || phase !== "ready"}
               onClick={() => void doExport("clipboard")}
             >

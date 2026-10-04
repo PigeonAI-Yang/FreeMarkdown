@@ -76,7 +76,7 @@ async fn fs_list_dir(path: String) -> Result<Vec<FileEntry>, String> {
 }
 
 #[tauri::command]
-fn fs_pick_folder(app: tauri::AppHandle) -> Result<Option<String>, String> {
+async fn fs_pick_folder(app: tauri::AppHandle) -> Result<Option<String>, String> {
     use tauri_plugin_dialog::DialogExt;
     Ok(app
         .dialog()
@@ -87,7 +87,7 @@ fn fs_pick_folder(app: tauri::AppHandle) -> Result<Option<String>, String> {
 }
 
 #[tauri::command]
-fn fs_pick_markdown_file(app: tauri::AppHandle) -> Result<Option<String>, String> {
+async fn fs_pick_markdown_file(app: tauri::AppHandle) -> Result<Option<String>, String> {
     use tauri_plugin_dialog::DialogExt;
     Ok(app
         .dialog()
@@ -100,7 +100,7 @@ fn fs_pick_markdown_file(app: tauri::AppHandle) -> Result<Option<String>, String
 
 /// 编辑「另存为」：选择目标 Markdown 路径（不写文件，写入由 write_markdown 负责）
 #[tauri::command]
-fn fs_pick_markdown_save_path(
+async fn fs_pick_markdown_save_path(
     app: tauri::AppHandle,
     default_name: String,
 ) -> Result<Option<String>, String> {

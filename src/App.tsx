@@ -328,7 +328,7 @@ function AppShell() {
         // Ctrl+F → 切换全文搜索（屏蔽浏览器查找）
         e.preventDefault();
         appStore.set({ searchOpen: !appStore.get().searchOpen });
-      } else if (k === "s") {
+      } else if (k === "s" && !e.shiftKey) {
         // Ctrl+S → 保存当前文档（编辑器内 CM6 已绑，这里兜底全局）
         e.preventDefault();
         actions.saveActive();

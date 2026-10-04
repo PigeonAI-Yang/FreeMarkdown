@@ -67,7 +67,7 @@ pub async fn card_images_dataurl(srcs: Vec<String>) -> Result<Vec<Option<String>
 
 /// 保存对话框：按格式设置过滤器，返回用户选择的路径（取消为 None）
 #[tauri::command]
-pub fn card_pick_save_path(
+pub async fn card_pick_save_path(
     app: AppHandle,
     default_name: String,
     format: String,
@@ -80,14 +80,14 @@ pub fn card_pick_save_path(
             .set_title("保存图片卡片")
             .add_filter("JPEG 图片", &["jpg", "jpeg"])
             .set_file_name(&default_name)
-            .blocking_pick_file(),
+            .blocking_save_file(),
         _ => app
             .dialog()
             .file()
             .set_title("保存图片卡片")
             .add_filter("PNG 图片", &["png"])
             .set_file_name(&default_name)
-            .blocking_pick_file(),
+            .blocking_save_file(),
     };
     Ok(picked.map(|p| p.to_string()))
 }

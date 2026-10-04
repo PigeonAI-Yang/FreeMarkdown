@@ -209,6 +209,7 @@
 }
 
 .card-status {
+  min-width: 0;
   max-width: 420px;
   overflow: hidden;
   text-overflow: ellipsis;

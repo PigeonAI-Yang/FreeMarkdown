@@ -72,6 +72,7 @@ export function EditView({ path, panelId, isActive, onRequestClose }: Props) {
   const [conflict, setConflict] = useState<number | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [refreshPrompt, setRefreshPrompt] = useState(false);
+  const refreshPromptRef = useRef(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const savedAtRef = useRef<number | null>(null);
   /** 自己发起写入的时间（用于过滤"自己保存"触发的监听事件） */
@@ -229,10 +230,15 @@ export function EditView({ path, panelId, isActive, onRequestClose }: Props) {
     }
     // 空闲自动保存：冲突未解时不覆盖磁盘
     if (autosaveRef.current) clearTimeout(autosaveRef.current);
-    autosaveRef.current = window.setTimeout(() => {
-      autosaveRef.current = null;
-      if (conflictRef.current == null) void saveRef.current();
-    }, AUTOSAVE_MS);
+    autosaveRef.current = null;
+    if (!refreshPromptRef.current) {
+      autosaveRef.current = window.setTimeout(() => {
+        autosaveRef.current = null;
+        if (!refreshPromptRef.current && conflictRef.current == null) {
+          void saveRef.current();
+        }
+      }, AUTOSAVE_MS);
+    }
     // 打字期不跑 mermaid（重），停下来再补
     typingRef.current = true;
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
@@ -249,6 +255,7 @@ export function EditView({ path, panelId, isActive, onRequestClose }: Props) {
 
   const reloadFromDisk = useCallback(async () => {
     const view = viewRef.current;
+    refreshPromptRef.current = false;
     if (autosaveRef.current) clearTimeout(autosaveRef.current);
     autosaveRef.current = null;
     if (mountedRef.current) setRefreshPrompt(false);
@@ -287,6 +294,9 @@ export function EditView({ path, panelId, isActive, onRequestClose }: Props) {
       if (!viewRef.current || !srcRef.current) return;
       if (savingRef.current) return;
       if (dirtyRef.current) {
+        refreshPromptRef.current = true;
+        if (autosaveRef.current) clearTimeout(autosaveRef.current);
+        autosaveRef.current = null;
         setRefreshPrompt(true);
         return;
       }
@@ -330,7 +340,9 @@ export function EditView({ path, panelId, isActive, onRequestClose }: Props) {
         },
         onSave: () => void saveRef.current(),
         onBlur: () => {
-          if (dirtyRef.current) void saveRef.current();
+          if (dirtyRef.current && !refreshPromptRef.current) {
+            void saveRef.current();
+          }
         },
         onSelection: () => onSelectionRef.current(),
       }),
@@ -615,7 +627,13 @@ export function EditView({ path, panelId, isActive, onRequestClose }: Props) {
       };
       putEditSession(path, snapOut);
       // 冻结/关闭前立即落盘（不阻塞拆卸）
-      if (dirtyRef.current && conflictRef.current == null) void saveRef.current();
+      if (
+        dirtyRef.current &&
+        conflictRef.current == null &&
+        !refreshPromptRef.current
+      ) {
+        void saveRef.current();
+      }
       view.destroy();
       viewRef.current = null;
       controller.dispose();
@@ -854,7 +872,13 @@ export function EditView({ path, panelId, isActive, onRequestClose }: Props) {
           </button>
           <button
             data-refresh-action="cancel"
-            onClick={() => setRefreshPrompt(false)}
+            onClick={() => {
+              refreshPromptRef.current = false;
+              setRefreshPrompt(false);
+              if (dirtyRef.current && conflictRef.current == null) {
+                markDirtyRef.current();
+              }
+            }}
           >
             取消
           </button>
