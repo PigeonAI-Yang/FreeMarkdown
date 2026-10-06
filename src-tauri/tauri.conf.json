@@ -6,7 +6,7 @@
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://127.0.0.1:1420",
-    "beforeBuildCommand": "pnpm build",
+    "beforeBuildCommand": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-readaloud.ps1 -Destination src-tauri/target/readaloud-resources && pnpm build",
     "frontendDist": "../dist"
   },
   "app": {
@@ -27,13 +27,34 @@
       "csp": null,
       "assetProtocol": {
         "enable": true,
-        "scope": ["**"]
+        "scope": [
+          "**"
+        ]
       }
     }
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis"],
-    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/icon.ico", "icons/icon.png"]
+    "targets": [
+      "nsis"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/icon.ico",
+      "icons/icon.png"
+    ],
+    "resources": {
+      "target/readaloud-resources/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/encoder.int8.onnx": "readaloud/zipvoice/encoder.int8.onnx",
+      "target/readaloud-resources/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/decoder.int8.onnx": "readaloud/zipvoice/decoder.int8.onnx",
+      "target/readaloud-resources/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/tokens.txt": "readaloud/zipvoice/tokens.txt",
+      "target/readaloud-resources/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt": "readaloud/zipvoice/lexicon.txt",
+      "target/readaloud-resources/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/vocos_24khz.onnx": "readaloud/zipvoice/vocos_24khz.onnx",
+      "target/readaloud-resources/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/conversation-female.wav": "readaloud/zipvoice/conversation-female.wav",
+      "target/readaloud-resources/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data/": "readaloud/zipvoice/espeak-ng-data/",
+      "target/sherpa-onnx-prebuilt/sherpa-onnx-v1.13.8-win-x64-shared-MT-Release-lib/lib/onnxruntime.dll": "onnxruntime.dll",
+      "target/sherpa-onnx-prebuilt/sherpa-onnx-v1.13.8-win-x64-shared-MT-Release-lib/lib/onnxruntime_providers_shared.dll": "onnxruntime_providers_shared.dll",
+      "target/sherpa-onnx-prebuilt/sherpa-onnx-v1.13.8-win-x64-shared-MT-Release-lib/lib/sherpa-onnx-c-api.dll": "sherpa-onnx-c-api.dll"
+    }
   }
 }

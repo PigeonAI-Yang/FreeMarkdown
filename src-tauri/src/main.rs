@@ -6,6 +6,7 @@ mod markdown;
 mod search;
 mod session;
 mod watch;
+mod readaloud;
 
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -242,6 +243,7 @@ fn main() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .manage(markdown::CacheState::new(64))
+        .manage(readaloud::ReadAloud::default())
         .setup(|app| {
             // 常驻文件监听：阅读/编辑面板打开的文件被外部改动时广播 app:file-changed
             match watch::install(app.handle()) {
@@ -267,6 +269,10 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            readaloud::readaloud_reset,
+            readaloud::readaloud_pause,
+            readaloud::readaloud_enqueue,
+            readaloud::readaloud_default_model_dir,
             markdown::read_markdown,
             markdown::read_markdown_source,
             markdown::render_markdown_blocks,

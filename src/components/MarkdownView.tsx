@@ -21,6 +21,7 @@ import {
 import { enhanceChunk, handleCodeBlockClick } from "../lib/enhance";
 import { useFileWatch } from "../lib/watch";
 import { Lightbox } from "./Lightbox";
+import { highlightReading } from "../readaloud/service";
 
 /** 超过此源文件大小走分块虚拟滚动 */
 const BIG_DOC_BYTES = 1024 * 1024;
@@ -116,6 +117,7 @@ export function MarkdownView({ path, panelId }: MdViewProps) {
   const afterInject = useCallback(
     (_container: HTMLElement) => {
       void enhanceChunk(_container);
+      highlightReading();
     },
     [],
   );
@@ -219,7 +221,7 @@ export function MarkdownView({ path, panelId }: MdViewProps) {
   }
 
   return (
-    <div ref={scrollerRef} className="doc-scroll" onScroll={onScroll} onClick={onClick}>
+    <div ref={scrollerRef} className="doc-scroll" data-reading-path={path} onScroll={onScroll} onClick={onClick}>
       {bigDoc ? (
         <ChunkedContent ref={contentRef} chunks={doc.chunks} onInject={afterInject} />
       ) : (

@@ -28,6 +28,7 @@ import { CardPanel } from "../card/CardPanel";
 import { EditPane } from "../edit/EditPane";
 import { getChrome } from "../lib/webview2";
 import { usePointerTabDrag } from "./useTabDrag";
+import { sourceClosed } from "../readaloud/service";
 
 type DocParams = { path: string };
 
@@ -231,6 +232,9 @@ export function DockHost({ layout }: { layout: SerializedDockview | null }) {
     sweepEmptyGroups(api);
 
     api.onDidActivePanelChange(() => syncActivePanel(api));
+    api.onDidRemovePanel(panel => {
+      if (panel.id.startsWith('doc:') && !appStore.get().settingsOpen && !rebuildState.paths.includes(panel.id.slice(4))) sourceClosed(panel.id.slice(4));
+    });
     api.onDidLayoutChange(() => {
       sessionMarkDirty();
       scheduleLayoutSave(api);

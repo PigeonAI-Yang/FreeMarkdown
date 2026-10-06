@@ -24,6 +24,8 @@ import { SettingsPage } from "./components/SettingsPage";
 import { ContextMenu } from "./components/ContextMenu";
 import { restoreCardSettings } from "./card/cardStore";
 import { useFileOpenBridge } from "./lib/filedrop";
+import { initializeReadAloud } from "./readaloud/service";
+import { ReadAloudControls } from "./readaloud/ReadAloudControls";
 
 const DOC_WIDTH_VALUE: Record<DocWidth, string> = {
   narrow: "60ch",
@@ -33,6 +35,7 @@ const DOC_WIDTH_VALUE: Record<DocWidth, string> = {
 };
 
 export default function App() {
+  useEffect(initializeReadAloud, []);
   return (
     <>
       <AppShell />
@@ -510,6 +513,7 @@ function ToolBar() {
       >
         <IconCard />
       </button>
+      <ReadAloudControls />
 
       {/* 编辑形态：仅源码 / 分栏 / 仅预览（全局，作用于编辑面板） */}
       <div className="tb-seg" role="group" aria-label="编辑形态">

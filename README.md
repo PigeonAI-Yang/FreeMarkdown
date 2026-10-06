@@ -3,6 +3,7 @@
 [![GitHub Stars](https://img.shields.io/github/stars/PigeonAI-Yang/FreeMarkdown?style=flat-square&label=Stars)](https://github.com/PigeonAI-Yang/FreeMarkdown) [![GitHub Forks](https://img.shields.io/github/forks/PigeonAI-Yang/FreeMarkdown?style=flat-square&label=Forks)](https://github.com/PigeonAI-Yang/FreeMarkdown/forks) [![GitHub Issues](https://img.shields.io/github/issues/PigeonAI-Yang/FreeMarkdown?style=flat-square&label=Issues)](https://github.com/PigeonAI-Yang/FreeMarkdown/issues) [![Windows](https://img.shields.io/badge/platform-Windows-0078D4?style=flat-square)](#从源码运行) [![Follow on X](https://img.shields.io/badge/Follow-%40KimbomArtist-000000?style=flat-square&logo=x&logoColor=white)](https://x.com/KimbomArtist)
 
 [简体中文](README.md) | [English](README.en.md)
+[更新日志](CHANGELOG.md)
 
 **多份 Markdown，同屏分屏阅读。**
 

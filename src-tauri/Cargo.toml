@@ -13,6 +13,8 @@ tauri-build = { version = "2", features = [] }
 custom-protocol = ["tauri/custom-protocol"]
 
 [dependencies]
+sherpa-onnx = { version = "=1.13.8", default-features = false, features = ["shared"] }
+rodio = { version = "0.20", default-features = false }
 tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-opener = "2"

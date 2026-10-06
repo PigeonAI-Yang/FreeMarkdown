@@ -1,5 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { actions, appStore, useApp, type DocWidth } from "../lib/store";
+import { api } from "../lib/ipc";
+import { setFollow, setReadingPreference, useReadAloud } from "../readaloud/service";
 
 /**
  * 全屏设置页：独占整个窗口（不显示顶部工具栏与阅读区）。
@@ -409,6 +411,10 @@ function AppearancePane() {
 
 function ReadingPane() {
   const app = useApp();
+  const readAloud = useReadAloud();
+  const perform = (promise: Promise<unknown>) => {
+    void promise.catch((error) => console.error("[readaloud]", error));
+  };
   return (
     <div>
       <PaneTitle title="阅读" desc="控制阅读区的面板显隐与打开方式。" />
@@ -431,6 +437,50 @@ function ReadingPane() {
         </div>
         <p className="pb-2 text-[12px] text-text-3">
           也可以把 .md 文件或文件夹直接拖进窗口打开。
+        </p>
+      </Card>
+      <Card title="朗读">
+        <Row label="声音">
+          <span data-setting="readaloud-voice">对话女声</span>
+        </Row>
+        <Row label="速度">
+          <select
+            aria-label="朗读速度"
+            data-setting="readaloud-speed"
+            className="rounded border border-border-app bg-bg px-2 py-1 text-[12px] text-text-1"
+            value={readAloud.speed}
+            onChange={(event) => perform(setReadingPreference({ speed: Number(event.target.value) }))}
+          >
+            {[0.6, 0.8, 1, 1.2, 1.4, 1.6].map((speed) => (
+              <option key={speed} value={speed}>{speed}×</option>
+            ))}
+          </select>
+        </Row>
+        <Row label="跟随当前段落">
+          <span data-setting="readaloud-follow">
+            <Toggle on={readAloud.follow} onChange={setFollow} />
+          </span>
+        </Row>
+        <Row label="本地模型文件夹">
+          <div className="flex min-w-0 items-center gap-2">
+            <span
+              data-setting="readaloud-model-path"
+              className="max-w-56 truncate text-[12px] text-text-2"
+              title={readAloud.modelDir || undefined}
+            >
+              {readAloud.modelDir || "尚未选择本地模型文件夹"}
+            </span>
+            <button
+              className="icon-btn border border-border-app px-3 text-[12px]"
+              onClick={() => perform(api.pickFolder().then((path) =>
+                path ? setReadingPreference({ modelDir: path }) : undefined))}
+            >
+              选择本地模型文件夹
+            </button>
+          </div>
+        </Row>
+        <p className="pb-2 text-[12px] text-text-3">
+          音频在本机生成；更改速度或模型会停止当前朗读。
         </p>
       </Card>
     </div>

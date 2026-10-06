@@ -1,0 +1,3 @@
+.readaloud-controls { display:flex; align-items:center; gap:2px; min-width:0; }
+.readaloud-status { font-size:11px; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-3); }
+.markdown-body .readaloud-current { background:color-mix(in srgb, #e5ac36 22%, transparent); outline:2px solid color-mix(in srgb, #e5ac36 45%, transparent); border-radius:4px; }
